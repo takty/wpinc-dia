@@ -1,0 +1,76 @@
+# Translation of Dia - Development in Japanese
+# @package Wpinc Dia
+# @author Takuto Yanagida
+# @version 2022-02-02
+
+# Link Picker ------------------------------------------------------------------
+
+msgctxt "link picker"
+msgid "Add Link"
+msgstr "リンクの追加"
+
+msgctxt "link picker"
+msgid "Remove"
+msgstr "削除"
+
+msgctxt "link picker"
+msgid "Title"
+msgstr "タイトル"
+
+msgctxt "link picker"
+msgid "Select"
+msgstr "選択"
+
+# Media Picker -----------------------------------------------------------------
+
+msgctxt "media picker"
+msgid "Add Media"
+msgstr "メディアの追加"
+
+msgctxt "media picker"
+msgid "Remove"
+msgstr "削除"
+
+msgctxt "media picker"
+msgid "Title"
+msgstr "タイトル"
+
+msgctxt "media picker"
+msgid "Select"
+msgstr "選択"
+
+msgctxt "media picker"
+msgid "File name:"
+msgstr "ファイル名:"
+
+# Post Thumbnail ---------------------------------------------------------------
+
+msgctxt "post thumbnail"
+msgid "Remove"
+msgstr "削除"
+
+msgctxt "post thumbnail"
+msgid "Select"
+msgstr "選択"
+
+# Single Media Picker ----------------------------------------------------------
+
+msgctxt "single media picker"
+msgid "Remove"
+msgstr "削除"
+
+msgctxt "single media picker"
+msgid "Title"
+msgstr "タイトル"
+
+msgctxt "single media picker"
+msgid "File name:"
+msgstr "ファイル名:"
+
+msgctxt "single media picker"
+msgid "Select"
+msgstr "選択"
+
+msgctxt "single media picker"
+msgid "Add Media"
+msgstr "メディアの追加"

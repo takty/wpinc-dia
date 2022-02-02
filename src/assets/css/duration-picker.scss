@@ -1,0 +1,26 @@
+/**
+ * Duration Picker
+ *
+ * @author Takuto Yanagida
+ * @version 2022-02-02
+ */
+
+.wpinc-dia-duration-picker {
+	table {
+		tr td:first-child {
+			text-align: right;
+		}
+	}
+}
+
+.flatpickr-calendar {
+	z-index: 9999 !important;
+}
+
+.flatpickr-current-month {
+	display        : inline-flex !important;
+	justify-content: center      !important;
+	flex-direction : row-reverse !important;
+	align-items    : center;
+	padding-top    : 0;
+}

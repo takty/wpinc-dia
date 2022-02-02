@@ -1,0 +1,83 @@
+/**
+ * Single Media Picker
+ *
+ * @author Takuto Yanagida
+ * @version 2022-02-02
+ */
+
+.wpinc-dia-single-media-picker {
+	margin: 1em 0;
+
+	.add-row {
+		text-align: right;
+		margin-top: 1em;
+	}
+
+	.item {
+		display: flex;
+	}
+
+	.item-ctrl {
+		display       : flex;
+		flex-direction: column;
+		align-items   : center;
+
+		width  : 40px;
+		padding: 4px 16px 4px 2px;
+
+		.delete {
+			color      : #a00;
+			font-size  : 11px;
+			line-height: 1;
+			white-space: nowrap;
+		}
+	}
+
+	.item-cont {
+		flex-grow: 1;
+		width    : calc(100% - 40px);
+
+		> div {
+			display    : flex;
+			flex-wrap  : wrap;
+			align-items: center;
+			padding    : 2px 0;
+
+			&:nth-child(1) > input {
+				flex-grow: 1;
+			}
+
+			&:nth-child(2) {
+				width: 100%;
+			}
+
+			span:first-child {
+				display  : inline-block;
+				min-width: 4.5rem;
+				width    : calc((20rem - 100%) * 1000);
+				max-width: 100%;
+
+				padding-right: 4px;
+				text-align   : left;
+			}
+
+			span:last-child {
+				flex-grow: 1;
+				display  : flex;
+			}
+
+			.select {
+				margin-left: 4px !important;
+			}
+		}
+	}
+
+	.filename {
+		margin   : 1px;
+		flex-grow: 1;
+
+		padding   : 3px 5px;
+		border    : 1px solid #eee;
+		word-break: break-all;
+	}
+}
