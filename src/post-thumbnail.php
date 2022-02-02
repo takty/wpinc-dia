@@ -19,7 +19,7 @@ namespace wpinc\dia\post_thumbnail;
  *     @type string 'key'    Meta key.
  * }
  */
-function initialize( array $args = array() ) {
+function initialize( array $args = array() ): void {
 	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\dia\get_file_uri( __DIR__ ) );
 	_register_script( $url_to );
 }
@@ -31,7 +31,7 @@ function initialize( array $args = array() ) {
  *
  * @param string $url_to Base URL.
  */
-function _register_script( string $url_to ) {
+function _register_script( string $url_to ): void {
 	if ( is_admin() ) {
 		add_action(
 			'admin_enqueue_scripts',
@@ -108,7 +108,7 @@ function _save_data( array $args, int $post_id, int $media_id ): void {
  * @param string  $context  (Optional) The context within the screen where the box should display.
  * @param string  $priority (Optional) The priority within the context where the box should show.
  */
-function add_meta_box( array $args, string $title, ?string $screen, string $context = 'side', string $priority = 'default' ): void {
+function add_meta_box( array $args, string $title, ?string $screen = null, string $context = 'side', string $priority = 'default' ): void {
 	$args = _set_default_args( $args );
 	\add_meta_box(
 		"{$args['key']}_mb",

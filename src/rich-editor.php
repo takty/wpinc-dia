@@ -4,12 +4,10 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-01
+ * @version 2022-02-02
  */
 
 namespace wpinc\dia\rich_editor;
-
-require_once __DIR__ . '/../system/field.php';
 
 /**
  * Assign default arguments.
@@ -44,7 +42,7 @@ function _set_default_args( array $args ): array {
  * @param string  $context  (Optional) The context within the screen where the box should display.
  * @param string  $priority (Optional) The priority within the context where the box should show.
  */
-function add_meta_box( array $args, string $title, ?string $screen, string $context = 'advanced', string $priority = 'default' ) {
+function add_meta_box( array $args, string $title, ?string $screen = null, string $context = 'advanced', string $priority = 'default' ): void {
 	$args = _set_default_args( $args );
 	\add_meta_box(
 		"{$args['key']}_mb",
