@@ -2,10 +2,13 @@
  * Link Picker
  *
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-03
  */
 
-const setLinkPicker = (function () {
+window.wpinc     = window.wpinc ?? {}
+window.wpinc.dia = window.wpinc.dia ?? {}
+
+window.wpinc.dia.setLinkPicker = (function () {
 
 	function setLinkPicker(elm, cls = false, fn = null, opts = {}) {
 		if (cls === false) cls = 'link';
@@ -80,8 +83,8 @@ const setLinkPicker = (function () {
 		setTimeout(toFunc, time);
 	}
 
-	let postTypeSpec = null;
-	let lastPostTypeSpec = null;
+	let postTypeSpec              = null;
+	let lastPostTypeSpec          = null;
 	let isPostTypeSpecInitialized = false;
 
 	function setPostTypeSpecification(postType) {

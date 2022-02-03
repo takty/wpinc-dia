@@ -4,11 +4,11 @@
  *
  * @package Sample
  * @author Takuto Yanagida
- * @version 2022-02-01
+ * @version 2022-02-02
  */
 
 namespace sample\duration_picker {
-	require_once __DIR__ . '/dia/duration_picker.php';
+	require_once __DIR__ . '/dia/duration-picker.php';
 
 	/**
 	 * Initializes duration picker.
@@ -65,7 +65,7 @@ namespace sample\duration_picker {
 }
 
 namespace sample\link_picker {
-	require_once __DIR__ . '/dia/link_picker.php';
+	require_once __DIR__ . '/dia/link-picker.php';
 
 	/**
 	 * Initializes single link picker.
@@ -133,7 +133,7 @@ namespace sample\link_picker {
 }
 
 namespace sample\media_picker {
-	require_once __DIR__ . '/dia/media_picker.php';
+	require_once __DIR__ . '/dia/media-picker.php';
 
 	/**
 	 * Initializes single media picker.
@@ -198,7 +198,7 @@ namespace sample\media_picker {
 }
 
 namespace sample\post_thumbnail {
-	require_once __DIR__ . '/dia/post_thumbnail.php';
+	require_once __DIR__ . '/dia/post-thumbnail.php';
 
 	/**
 	 * Initializes duration picker.
@@ -250,7 +250,7 @@ namespace sample\post_thumbnail {
 }
 
 namespace sample\rich_editor {
-	require_once __DIR__ . '/dia/rich_editor.php';
+	require_once __DIR__ . '/dia/rich-editor.php';
 
 	/**
 	 * Adds the meta box to template admin screen.
@@ -277,7 +277,7 @@ namespace sample\rich_editor {
 }
 
 namespace sample\single_media_picker {
-	require_once __DIR__ . '/dia/single_media_picker.php';
+	require_once __DIR__ . '/dia/single-media-picker.php';
 
 	/**
 	 * Initializes single media picker.

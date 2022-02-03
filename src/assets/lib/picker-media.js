@@ -2,10 +2,13 @@
  * Media Picker
  *
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-03
  */
 
-function setMediaPicker(elm, cls = false, fn = null, opts = {}) {
+window.wpinc     = window.wpinc ?? {}
+window.wpinc.dia = window.wpinc.dia ?? {}
+
+window.wpinc.dia.setMediaPicker = function (elm, cls = false, fn = null, opts = {}) {
 	if (cls === false) cls = 'media';
 	opts = Object.assign({ multiple: false, type: '', parentGen: 1, title: false }, opts);
 

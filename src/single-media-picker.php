@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-03
  */
 
 namespace wpinc\dia\single_media_picker;
@@ -39,8 +39,8 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
-				wp_enqueue_script( 'wpinc-dia-single-media-picker', \wpinc\dia\abs_url( $url_to, './assets/js/single-media-picker.min.js' ), array( 'picker-media' ), '1.0', false );
+				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-single-media-picker', \wpinc\dia\abs_url( $url_to, './assets/js/single-media-picker.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
 				wp_enqueue_style( 'wpinc-dia-single-media-picker', \wpinc\dia\abs_url( $url_to, './assets/css/single-media-picker.min.css' ), array(), '1.0' );
 			}
 		);
@@ -192,6 +192,11 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	$filename = $it['filename'];
 
 	$ro = $args['title_editable'] ? '' : ' readonly';
+
+	$script = sprintf(
+		'window.addEventListener("load", () => { wpinc_single_media_picker_init("%s"); });',
+		$key,
+	);
 	?>
 	<div class="wpinc-dia-single-media-picker" id="<?php echo esc_attr( $key ); ?>">>
 		<div class="item">
@@ -218,11 +223,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 		<div class="add-row">
 			<button class="button add"><?php echo esc_html_x( 'Add Media', 'single media picker', 'wpinc_dia' ); ?></button>
 		</div>
-		<script>
-			window.addEventListener('load', () => {
-				wpinc_single_media_picker_init('<?php echo esc_attr( $key ); ?>');
-			});
-		</script>
+		<script><?php echo $script;  // phpcs:ignore ?></script>
 	</div>
 	<?php
 }

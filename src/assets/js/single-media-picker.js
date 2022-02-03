@@ -2,7 +2,7 @@
  * Single Media Picker
  *
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-03
  */
 
 function wpinc_single_media_picker_init(key) {
@@ -12,7 +12,7 @@ function wpinc_single_media_picker_init(key) {
 
 	const item = body.getElementsByClassName('item')[0];
 
-	if (item.querySelector(`[name='${key}[media]']`).value) {
+	if (item.querySelector(`*[name='${key}[media]']`).value) {
 		item.style.display    = '';
 		add_row.style.display = 'none';
 	} else {
@@ -26,10 +26,10 @@ function wpinc_single_media_picker_init(key) {
 
 
 	function set_item(it, f) {
-		it.querySelector(`[name='${key}[media]']`).value    = f.id;
-		it.querySelector(`[name='${key}[url]']`).value      = f.url;
-		it.querySelector(`[name='${key}[title]']`).value    = f.title;
-		it.querySelector(`[name='${key}[filename]']`).value = f.filename;
+		it.querySelector(`*[name='${key}[media]']`).value    = f.id;
+		it.querySelector(`*[name='${key}[url]']`).value      = f.url;
+		it.querySelector(`*[name='${key}[title]']`).value    = f.title;
+		it.querySelector(`*[name='${key}[filename]']`).value = f.filename;
 		it.getElementsByClassName('filename')[0].innerText  = f.filename;
 	}
 
@@ -44,7 +44,7 @@ function wpinc_single_media_picker_init(key) {
 			add_row.style.display = '';
 		});
 		opener.addEventListener('click', () => {
-			const url = it.querySelector(`[name='${key}[url]']`).value;
+			const url = it.querySelector(`*[name='${key}[url]']`).value;
 			if (url) window.open(url);
 		});
 		function on_clicked(t, m) {
@@ -52,7 +52,7 @@ function wpinc_single_media_picker_init(key) {
 			it.style.display    = '';
 			add_row.style.display = 'none';
 		}
-		setMediaPicker(sel_btn, false, on_clicked, { multiple: false, title: sel_btn.innerText });
-		setMediaPicker(add_btn, false, on_clicked, { multiple: false, title: add_btn.innerText });
+		window.wpinc.dia.setMediaPicker(sel_btn, false, on_clicked, { multiple: false, title: sel_btn.innerText });
+		window.wpinc.dia.setMediaPicker(add_btn, false, on_clicked, { multiple: false, title: add_btn.innerText });
 	}
 }

@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-03
  */
 
 namespace wpinc\dia\media_picker;
@@ -40,8 +40,8 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
-				wp_enqueue_script( 'wpinc-dia-media-picker', \wpinc\dia\abs_url( $url_to, './assets/js/media-picker.min.js' ), array( 'picker-media' ), '1.0', false );
+				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-media-picker', \wpinc\dia\abs_url( $url_to, './assets/js/media-picker.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
 				wp_enqueue_style( 'wpinc-dia-media-picker', \wpinc\dia\abs_url( $url_to, './assets/css/media-picker.min.css' ), array(), '1.0' );
 			}
 		);
@@ -81,7 +81,7 @@ function get_data( array $args, ?int $post_id = null ): array {
 		$post_id = get_the_ID();
 	}
 	$sub_keys = array( 'media_id', 'url', 'title', 'filename' );
-	$its      = get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
+	$its      = \wpinc\dia\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
 	foreach ( $its as &$it ) {
 		$it += array(
 			'url'      => '',
@@ -103,7 +103,7 @@ function get_data( array $args, ?int $post_id = null ): array {
 function _save_data( array $args, int $post_id ) {
 	$sub_keys = array( 'media_id', 'url', 'title', 'filename', 'delete' );
 
-	$its = get_multiple_post_meta_from_post( $args['key'], $sub_keys );
+	$its = \wpinc\dia\get_multiple_post_meta_from_env( $args['key'], $sub_keys );
 	$its = array_filter(
 		$its,
 		function ( $it ) {
@@ -113,7 +113,7 @@ function _save_data( array $args, int $post_id ) {
 	$its = array_values( $its );
 
 	$sub_keys = array( 'media_id', 'url', 'title', 'filename' );
-	update_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
+	\wpinc\dia\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
 }
 
 
@@ -190,9 +190,14 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
  */
 function output_html( array $args, ?int $post_id = null ): void {
 	$key = $args['key'];
-	$its = get_data( $post_id );
+	$its = get_data( $args, $post_id );
+
+	$script = sprintf(
+		'window.addEventListener("load", () => { wpinc_media_picker_init("%s"); });',
+		$key,
+	);
 	?>
-	<div class="wpinc-dia-media-picker" id="<?php echo esc_attr( $key ); ?>">>
+	<div class="wpinc-dia-media-picker" id="<?php echo esc_attr( $key ); ?>">
 		<div class="table">
 	<?php
 	_output_item_row( $args, array(), 'template' );
@@ -204,11 +209,7 @@ function output_html( array $args, ?int $post_id = null ): void {
 				<button class="button add"><?php echo esc_html_x( 'Add Media', 'media picker', 'wpinc_dia' ); ?></button>
 			</div>
 		</div>
-		<script>
-			window.addEventListener('load', () => {
-				wpinc_single_media_picker_init('<?php echo esc_attr( $key ); ?>');
-			});
-		</script>
+		<script><?php echo $script;  // phpcs:ignore ?></script>
 	</div>
 	<?php
 }
@@ -225,10 +226,10 @@ function output_html( array $args, ?int $post_id = null ): void {
 function _output_item_row( array $args, array $it, string $cls = '' ): void {
 	$key = $args['key'];
 
-	$media_id = $it['media_id'];
-	$url      = $it['url'];
-	$title    = $it['title'];
-	$filename = $it['filename'];
+	$media_id = $it['media_id'] ?? '';
+	$url      = $it['url'] ?? '';
+	$title    = $it['title'] ?? '';
+	$filename = $it['filename'] ?? '';
 
 	$ro = $args['title_editable'] ? '' : ' readonly';
 	?>
@@ -237,25 +238,25 @@ function _output_item_row( array $args, array $it, string $cls = '' ): void {
 			<div class="handle">=</div>
 			<label class="delete-label widget-control-remove">
 				<span><?php echo esc_html_x( 'Remove', 'media picker', 'wpinc_dia' ); ?></span>
-				<input type="checkbox" class="delete" name="<?php echo esc_attr( "{$key}[delete]" ); ?>">
+				<input type="checkbox" class="delete" data-key="delete">
 			</label>
 		</div>
 		<div class="item-cont">
 			<div>
 				<span><?php echo esc_html_x( 'Title', 'media picker', 'wpinc_dia' ); ?>:</span>
-				<input type="text" name="<?php esc_attr( "{$key}[title]" ); ?>" value="<?php echo esc_attr( $title ); ?>"<?php echo esc_attr( $ro ); ?>>
+				<input type="text" data-key="title" value="<?php echo esc_attr( $title ); ?>"<?php echo esc_attr( $ro ); ?>>
 			</div>
 			<div>
-				<span><button class="opener"><?php echo esc_html_x( 'File name:', 'media picker', 'wpinc_dia' ); ?></button></span>
+				<span><button type="button" class="opener"><?php echo esc_html_x( 'File name:', 'media picker', 'wpinc_dia' ); ?></button></span>
 				<span>
 					<span class="filename"><?php echo esc_html( $filename ); ?></span>
-					<button class="button select"><?php echo esc_html_x( 'Select', 'media picker', 'wpinc_dia' ); ?></button>
+					<button type="button" class="button select"><?php echo esc_html_x( 'Select', 'media picker', 'wpinc_dia' ); ?></button>
 				</span>
 			</div>
 		</div>
-		<input type="hidden" name=<?php echo esc_attr( "{$key}[media_id]" ); ?> value="<?php echo esc_attr( $media_id ); ?>">
-		<input type="hidden" name=<?php echo esc_attr( "{$key}[url]" ); ?> value="<?php echo esc_attr( $url ); ?>">
-		<input type="hidden" name=<?php echo esc_attr( "{$key}[filename]" ); ?> value="<?php echo esc_attr( $filename ); ?>">
+		<input type="hidden" data-key="media_id" value="<?php echo esc_attr( $media_id ); ?>">
+		<input type="hidden" data-key="url" value="<?php echo esc_attr( $url ); ?>">
+		<input type="hidden" data-key="filename" value="<?php echo esc_attr( $filename ); ?>">
 	</div>
 	<?php
 }

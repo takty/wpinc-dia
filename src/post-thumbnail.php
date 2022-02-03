@@ -36,8 +36,8 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), '1.0', false );
-				wp_enqueue_script( 'wpinc-dia-post-thumbnail', \wpinc\dia\abs_url( $url_to, './assets/js/post-thumbnail.min.js' ), array( 'picker-media' ), '1.0', false );
+				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), '1.0', false );
+				wp_enqueue_script( 'wpinc-dia-post-thumbnail', \wpinc\dia\abs_url( $url_to, './assets/js/post-thumbnail.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
 				wp_enqueue_style( 'wpinc-dia-post-thumbnail', \wpinc\dia\abs_url( $url_to, './assets/css/post-thumbnail.min.css' ), array(), '1.0' );
 			}
 		);
@@ -160,21 +160,23 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	if ( $it ) {
 		$src = wp_get_attachment_image_src( $it, 'medium' )[0];
 	}
+	$script = sprintf(
+		'window.addEventListener("load", () => { wpinc_post_thumbnail_init("%s"); });',
+		$key,
+	);
 	?>
-	<div id="<?php echo esc_attr( $key ); ?>">
-		<div class="wpinc-dia-post-thumbnail-img">
+	<div class="wpinc-dia-post-thumbnail" id="<?php echo esc_attr( $key ); ?>">
+		<div class="thumbnail">
 	<?php if ( $it ) : ?>
 			<img src="<?php echo esc_url( $src ); ?>">
 	<?php endif; ?>
 		</div>
-		<div class="wpinc-dia-post-thumbnail-row">
-			<button class="wpinc-dia-post-thumbnail-delete widget-control-remove"><?php echo esc_html_x( 'Remove', 'post thumbnail', 'wpinc_dia' ); ?></button>
-			<button class="wpinc-dia-post-thumbnail-select button"><?php echo esc_html_x( 'Select', 'post thumbnail', 'wpinc_dia' ); ?></button>
+		<div class="row">
+			<button class="delete widget-control-remove"><?php echo esc_html_x( 'Remove', 'post thumbnail', 'wpinc_dia' ); ?></button>
+			<button class="select button"><?php echo esc_html_x( 'Select', 'post thumbnail', 'wpinc_dia' ); ?></button>
 		</div>
-		<input type="hidden" name="<?php echo esc_attr( "{$key}_media" ); ?> value="<?php echo esc_attr( $it ); ?>">
-		<script>
-			window.addEventListener('load', () => { wpinc_dia_post_thumbnail_init('<?php echo esc_attr( $key ); ?>'); });
-		</script>
+		<input type="hidden" name="<?php echo esc_attr( $key ); ?> value="<?php echo esc_attr( $it ); ?>">
+		<script><?php echo $script;  // phpcs:ignore ?></script>
 	</div>
 	<?php
 }

@@ -5,22 +5,24 @@
  * @version 2022-02-01
  */
 
-.wpinc-dia-post-thumbnail-img > img {
-	object-fit  : contain;
-	aspect-ratio: 3 / 2;
-	width       : 100%;
-}
+.wpinc-dia-single-media-picker {
+	.thumbnail > img {
+		object-fit  : contain;
+		aspect-ratio: 3 / 2;
+		width       : 100%;
+	}
 
-.wpinc-dia-post-thumbnail-select {
-	margin-left: 4px !important;
-}
+	.select {
+		margin-left: 4px !important;
+	}
 
-.wpinc-dia-post-thumbnail-row {
-	display   : flex;
-	margin-top: 1em;
-}
+	.row {
+		display   : flex;
+		margin-top: 1em;
+	}
 
-.wpinc-dia-post-thumbnail-delete {
-	margin-right: auto;
-	color       : #a00;
+	.delete {
+		margin-right: auto;
+		color       : #a00;
+	}
 }

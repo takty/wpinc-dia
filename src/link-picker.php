@@ -58,8 +58,8 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'picker-link', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-link.min.js' ), array(), 1.0, true );
-				wp_enqueue_script( 'wpinc-dia-link-picker', \wpinc\dia\abs_url( $url_to, './assets/js/link-picker.min.js' ), array( 'picker-media' ), '1.0', false );
+				wp_enqueue_script( 'wpinc-dia-picker-link', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-link.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-link-picker', \wpinc\dia\abs_url( $url_to, './assets/js/link-picker.min.js' ), array( 'wpinc-dia-picker-link' ), '1.0', false );
 				wp_enqueue_style( 'wpinc-dia-link-picker', \wpinc\dia\abs_url( $url_to, './assets/css/link-picker.min.css' ), array(), '1.0' );
 			}
 		);
@@ -107,7 +107,7 @@ function get_data( array $args, ?int $post_id = null ): array {
 		$post_id = get_the_ID();
 	}
 	$sub_keys = array( 'url', 'title', 'post_id' );
-	$its      = get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
+	$its      = \wpinc\dia\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
 
 	foreach ( $its as &$it ) {
 		if ( empty( $it['post_id'] ) || ! is_numeric( $it['post_id'] ) ) {
@@ -159,7 +159,7 @@ function get_posts( array $args, ?int $post_id = null, bool $skip_except_post = 
 function _save_data( array $args, int $post_id ) {
 	$sub_keys = array( 'url', 'title', 'post_id', 'delete' );
 
-	$its = get_multiple_post_meta_from_post( $args['key'], $sub_keys );
+	$its = \wpinc\dia\get_multiple_post_meta_from_env( $args['key'], $sub_keys );
 	$its = array_filter(
 		$its,
 		function ( $it ) {
@@ -174,7 +174,7 @@ function _save_data( array $args, int $post_id ) {
 		}
 	}
 	$sub_keys = array( 'url', 'title', 'post_id' );
-	update_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
+	\wpinc\dia\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
 }
 
 /**
@@ -277,21 +277,25 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
 
-	$its = get_data( $post_id );
+	$its = get_data( $args, $post->ID );
 	if ( $args['max_count'] ) {
 		$its = array_slice( $its, 0, min( $args['max_count'], count( $its ) ) );
 	}
-	$pt = $args['post_type'] ? "'{$args['post_type']}'" : 'null';
-	$io = $args['internal_only'] ? 'true' : 'false';
-	$uh = $args['do_allow_url_hash'] ? 'true' : 'false';
-	$mc = $args['max_count'] ? $args['max_count'] : 'null';
+	$script = sprintf(
+		'window.addEventListener("load", () => { wpinc_link_picker_init("%s", %s, %s, %s, %s); });',
+		$key,
+		$args['internal_only'] ? 'true' : 'false',
+		$args['max_count'] ? strval( $args['max_count'] ) : 'null',
+		$args['do_allow_url_hash'] ? 'true' : 'false',
+		$args['post_type'] ? ( '"' . esc_html( $args['post_type'] ) . '"' ) : 'null'
+	);
 	?>
-	<div class="wpinc-dia-link-picker" id="<?php echo esc_attr( $key ); ?>">>
+	<div class="wpinc-dia-link-picker" id="<?php echo esc_attr( $key ); ?>">
 		<div class="table">
 	<?php
-	_output_item_row( $args, array(), 'template' );
+	_output_item_row( $args, array(), 'item-template' );
 	foreach ( $its as $it ) {
-		_output_item_row( $args, $it );
+		_output_item_row( $args, $it, 'item' );
 	}
 	?>
 			<div class="add-row">
@@ -299,17 +303,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 				<button class="button add"><?php echo esc_html_x( 'Add Link', 'link picker', 'wpinc_dia' ); ?></button>
 			</div>
 		</div>
-		<script>
-			window.addEventListener('load', () => {
-				wpinc_link_picker_init(
-					'<?php echo esc_attr( $key ); ?>',
-					<?php echo esc_attr( $io ); ?>,
-					<?php echo esc_attr( $mc ); ?>,
-					<?php echo esc_attr( $uh ); ?>,
-					<?php echo esc_attr( $pt ); ?>
-				);
-			});
-		</script>
+		<script><?php echo $script;  // phpcs:ignore ?></script>
 	</div>
 	<?php
 }
@@ -323,37 +317,37 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
  * @param array  $it   An item.
  * @param string $cls  CSS class.
  */
-function _output_item_row( array $args, array $it, string $cls = '' ): void {
+function _output_item_row( array $args, array $it, string $cls ): void {
 	$key = $args['key'];
 
-	$url     = $it['url'];
-	$title   = $it['title'];
-	$post_id = $it['post_id'];
+	$url     = $it['url'] ?? '';
+	$title   = $it['title'] ?? '';
+	$post_id = $it['post_id'] ?? '';
 
 	$ro = $args['internal_only'] ? ' readonly' : '';
 	?>
-	<div class="item<?php echo esc_attr( $cls ? " $cls" : '' ); ?>">
+	<div class="<?php echo esc_attr( $cls ); ?>">
 		<div class="item-ctrl">
 			<div class="handle">=</div>
 			<label class="delete-label widget-control-remove">
 				<span><?php echo esc_html_x( 'Remove', 'link picker', 'wpinc_dia' ); ?></span>
-				<input type="checkbox" class="delete" name="<?php echo esc_attr( "{$key}[delete]" ); ?>">
+				<input type="checkbox" class="delete" data-key="delete">
 			</label>
 		</div>
 		<div class="item-cont">
 			<div>
 				<span><?php echo esc_html_x( 'Title', 'link picker', 'wpinc_dia' ); ?>:</span>
-				<input type="text" name="<?php esc_attr( "{$key}[title]" ); ?>" value="<?php echo esc_attr( $title ); ?>">
+				<input type="text" data-key="title" value="<?php echo esc_attr( $title ); ?>">
 			</div>
 			<div>
-				<span><button class="opener">URL:</button></span>
+				<span><button type="button" class="opener">URL:</button></span>
 				<span>
-					<input type="text" class="url link-url" value="<?php echo esc_attr( $url ); ?>"<?php echo esc_attr( $ro ); ?>>
-					<button class="button select"><?php echo esc_html_x( 'Select', 'link picker', 'wpinc_dia' ); ?></button>
+					<input type="text" data-key="url" value="<?php echo esc_attr( $url ); ?>"<?php echo esc_attr( $ro ); ?>>
+					<button type="button" class="button select"><?php echo esc_html_x( 'Select', 'link picker', 'wpinc_dia' ); ?></button>
 				</span>
 			</div>
 		</div>
-		<input type="hidden" name=<?php echo esc_attr( "{$key}[post_id]" ); ?> value="<?php echo esc_attr( $post_id ); ?>">
+		<input type="hidden" data-key="post_id" value="<?php echo esc_attr( $post_id ); ?>">
 	</div>
 	<?php
 }

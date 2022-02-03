@@ -2,17 +2,17 @@
  * Media Picker
  *
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-03
  */
 
 function wpinc_media_picker_init(key) {
 	const body    = document.querySelector(`.wpinc-dia-media-picker#${key}`);
-	const add_row = body.getElementsByClassName('add_row')[0];
+	const add_row = body.getElementsByClassName('add-row')[0];
 	const add_btn = add_row.querySelector('.button.add');
 
 	const tbl   = body.getElementsByClassName('table')[0];
-	const items = tbl.querySelectorAll('.item:not(.template)');
-	const temp  = tbl.querySelector('.item.template');
+	const items = tbl.getElementsByClassName('item');
+	const temp  = tbl.querySelector('.item-template');
 
 	jQuery(tbl).sortable();
 	jQuery(tbl).sortable('option', {
@@ -21,29 +21,46 @@ function wpinc_media_picker_init(key) {
 		cursor     : 'move',
 		handle     : '.handle',
 		items      : '> .item',
-		placeholder: '.item-placeholder',
+		placeholder: 'item-placeholder',
+		update     : reorder_item_names,
 	});
+
+	reorder_item_names();
 	for (const it of items) assign_event_listener(it);
-	setMediaPicker(add_btn, false, (t, fs) => fs.forEach(f => add_new_item(f)), { multiple: true, title: add_btn.innerText });
+	window.wpinc.dia.setMediaPicker(add_btn, false, (t, fs) => {
+		for (const f of fs) add_new_item(f);
+		reorder_item_names();
+	}, { multiple: true, title: add_btn.innerText });
 
 
 	// -------------------------------------------------------------------------
 
 
+	function reorder_item_names() {
+		for (let i = 0; i < items.length; i += 1) {
+			const inputs = items[i].querySelectorAll('*[data-key]');
+			for (const input of inputs) {
+				const sub  = input.dataset.key;
+				input.name = `${key}[${i}][${sub}]`;
+			}
+		}
+	}
+
 	function add_new_item(f) {
 		const it = temp.cloneNode(true);
 		set_item(it, f);
-		it.classList.remove('template');
+		it.classList.remove('item-template');
+		it.classList.add('item');
 		tbl.insertBefore(it, add_row);
 		assign_event_listener(it);
 	}
 
 	function set_item(it, f) {
-		it.querySelector(`[name='${key}[media]']`).value    = f.id;
-		it.querySelector(`[name='${key}[url]']`).value      = f.url;
-		it.querySelector(`[name='${key}[title]']`).value    = f.title;
-		it.querySelector(`[name='${key}[filename]']`).value = f.filename;
-		it.getElementsByClassName('filename')[0].innerText  = f.filename;
+		it.querySelector(`*[data-key='media']`).value      = f.id;
+		it.querySelector(`*[data-key='url']`).value        = f.url;
+		it.querySelector(`*[data-key='title']`).value      = f.title;
+		it.querySelector(`*[data-key='filename']`).value   = f.filename;
+		it.getElementsByClassName('filename')[0].innerText = f.filename;
 	}
 
 	function assign_event_listener(it) {
@@ -59,9 +76,9 @@ function wpinc_media_picker_init(key) {
 			}
 		});
 		opener.addEventListener('click', () => {
-			const url = it.querySelector(`[name='${key}[url]']`).value;
+			const url = it.querySelector(`*[data-key='url']`).value;
 			if (url) window.open(url);
 		});
-		setMediaPicker(sel_btn, false, (t, f) => set_item(it, f), { multiple: false, title: sel_btn.innerText });
+		window.wpinc.dia.setMediaPicker(sel_btn, false, (t, f) => set_item(it, f), { multiple: false, title: sel_btn.innerText });
 	}
 }
