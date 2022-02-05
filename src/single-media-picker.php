@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-03
+ * @version 2022-02-05
  */
 
 namespace wpinc\dia\single_media_picker;
@@ -23,7 +23,7 @@ require_once __DIR__ . '/assets/asset-url.php';
  * }
  */
 function initialize( array $args = array() ): void {
-	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\dia\get_file_uri( __DIR__ ) );
+	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\get_file_uri( __DIR__ ) );
 	_register_script( $url_to );
 }
 
@@ -39,9 +39,9 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
-				wp_enqueue_script( 'wpinc-dia-single-media-picker', \wpinc\dia\abs_url( $url_to, './assets/js/single-media-picker.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
-				wp_enqueue_style( 'wpinc-dia-single-media-picker', \wpinc\dia\abs_url( $url_to, './assets/css/single-media-picker.min.css' ), array(), '1.0' );
+				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-single-media-picker', \wpinc\abs_url( $url_to, './assets/js/single-media-picker.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
+				wp_enqueue_style( 'wpinc-dia-single-media-picker', \wpinc\abs_url( $url_to, './assets/css/single-media-picker.min.css' ), array(), '1.0' );
 			}
 		);
 	}

@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-05
  */
 
 namespace wpinc\dia\link_picker;
@@ -42,7 +42,7 @@ add_filter(
  * }
  */
 function initialize( array $args = array() ): void {
-	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\dia\get_file_uri( __DIR__ ) );
+	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\get_file_uri( __DIR__ ) );
 	_register_script( $url_to );
 }
 
@@ -58,9 +58,9 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'wpinc-dia-picker-link', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-link.min.js' ), array(), 1.0, true );
-				wp_enqueue_script( 'wpinc-dia-link-picker', \wpinc\dia\abs_url( $url_to, './assets/js/link-picker.min.js' ), array( 'wpinc-dia-picker-link' ), '1.0', false );
-				wp_enqueue_style( 'wpinc-dia-link-picker', \wpinc\dia\abs_url( $url_to, './assets/css/link-picker.min.css' ), array(), '1.0' );
+				wp_enqueue_script( 'wpinc-dia-picker-link', \wpinc\abs_url( $url_to, './assets/lib/picker-link.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-link-picker', \wpinc\abs_url( $url_to, './assets/js/link-picker.min.js' ), array( 'wpinc-dia-picker-link' ), '1.0', false );
+				wp_enqueue_style( 'wpinc-dia-link-picker', \wpinc\abs_url( $url_to, './assets/css/link-picker.min.css' ), array(), '1.0' );
 			}
 		);
 	}

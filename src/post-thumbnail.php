@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2022-02-05
  */
 
 namespace wpinc\dia\post_thumbnail;
@@ -20,7 +20,7 @@ namespace wpinc\dia\post_thumbnail;
  * }
  */
 function initialize( array $args = array() ): void {
-	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\dia\get_file_uri( __DIR__ ) );
+	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\get_file_uri( __DIR__ ) );
 	_register_script( $url_to );
 }
 
@@ -36,9 +36,9 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\dia\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), '1.0', false );
-				wp_enqueue_script( 'wpinc-dia-post-thumbnail', \wpinc\dia\abs_url( $url_to, './assets/js/post-thumbnail.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
-				wp_enqueue_style( 'wpinc-dia-post-thumbnail', \wpinc\dia\abs_url( $url_to, './assets/css/post-thumbnail.min.css' ), array(), '1.0' );
+				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), '1.0', false );
+				wp_enqueue_script( 'wpinc-dia-post-thumbnail', \wpinc\abs_url( $url_to, './assets/js/post-thumbnail.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
+				wp_enqueue_style( 'wpinc-dia-post-thumbnail', \wpinc\abs_url( $url_to, './assets/css/post-thumbnail.min.css' ), array(), '1.0' );
 			}
 		);
 	}
