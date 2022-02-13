@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-05
+ * @version 2022-02-14
  */
 
 namespace wpinc\dia\post_thumbnail;
@@ -53,9 +53,7 @@ function _register_script( string $url_to ): void {
  * @return array Arguments.
  */
 function _set_default_args( array $args ): array {
-	// phpcs:disable
 	$args['key'] = $args['key'] ?? '';
-	// phpcs:enable
 	return $args;
 }
 

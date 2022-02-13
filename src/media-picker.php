@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-05
+ * @version 2022-02-14
  */
 
 namespace wpinc\dia\media_picker;
@@ -58,7 +58,7 @@ function _register_script( string $url_to ): void {
  */
 function _set_default_args( array $args ): array {
 	// phpcs:disable
-	$args['key']            = $args['key'] ?? '';
+	$args['key']            = $args['key']            ?? '';
 	$args['title_editable'] = $args['title_editable'] ?? true;
 	// phpcs:enable
 	return $args;

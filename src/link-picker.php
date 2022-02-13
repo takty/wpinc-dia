@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-05
+ * @version 2022-02-14
  */
 
 namespace wpinc\dia\link_picker;
@@ -18,7 +18,7 @@ require_once __DIR__ . '/assets/asset-url.php';
 add_filter(
 	'wp_link_query_args',
 	function ( $query ) {
-		$pts = $_POST['link_picker_pt'] ?? '';  // phpcs:ignore
+		$pts = sanitize_text_field( wp_unslash( $_POST['link_picker_pt'] ?? '' ) );  // phpcs:ignore
 		if ( $pts ) {
 			$query['post_type'] = explode( ',', $pts );
 		}
