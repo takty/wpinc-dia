@@ -2,7 +2,7 @@
  * Link Picker
  *
  * @author Takuto Yanagida
- * @version 2022-02-03
+ * @version 2022-06-16
  */
 
 function wpinc_link_picker_init(key, internal_only = false, max_count = null, do_allow_url_hash = false, post_type = null) {
@@ -65,10 +65,11 @@ function wpinc_link_picker_init(key, internal_only = false, max_count = null, do
 	}
 
 	function set_item(it, l) {
-		it.querySelector(`*[data-key='url']`).value   = l.url;
-		it.querySelector(`*[data-key='title']`).value = l.title;
+		it.querySelector('*[data-key="url"]').value     = l.url;
+		it.querySelector('*[data-key="title"]').value   = l.title;
+		it.querySelector('*[data-key="post_id"]').value = '';
 		if (internal_only) {
-			it.querySelector(`*[data-key='url']`).readOnly = true;
+			it.querySelector('*[data-key="url"]').readOnly = true;
 		}
 	}
 
@@ -85,7 +86,7 @@ function wpinc_link_picker_init(key, internal_only = false, max_count = null, do
 			}
 		});
 		opener.addEventListener('click', () => {
-			const url = it.querySelector(`*[data-key='url']`).value;
+			const url = it.querySelector('*[data-key="url"]').value;
 			if (url) window.open(url);
 		});
 		window.wpinc.dia.setLinkPicker(sel_btn, false, (t, l) => set_item(it, l), Object.assign(picker_opts, { title: sel_btn.innerText }));
