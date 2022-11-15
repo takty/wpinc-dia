@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-14
+ * @version 2022-11-15
  */
 
 namespace wpinc\dia\link_picker;
@@ -110,7 +110,7 @@ function get_data( array $args, ?int $post_id = null ): array {
 	$its      = \wpinc\dia\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
 
 	foreach ( $its as &$it ) {
-		if ( empty( $it['post_id'] ) || ! is_numeric( $it['post_id'] ) ) {
+		if ( ! is_numeric( $it['post_id'] ) ) {
 			continue;
 		}
 		$url = get_permalink( (int) $it['post_id'] );
@@ -139,6 +139,9 @@ function get_posts( array $args, ?int $post_id = null, bool $skip_except_post = 
 	$its = get_data( $args, $post_id );
 	$ps  = array();
 	foreach ( $its as $it ) {
+		if ( ! is_numeric( $it['post_id'] ) ) {
+			continue;
+		}
 		$p = get_post( $it['post_id'] );
 		if ( $skip_except_post && null === $p ) {
 			continue;
@@ -168,21 +171,20 @@ function _save_data( array $args, int $post_id ) {
 	);
 	$its = array_values( $its );
 
-	if ( $args['internal_only'] ) {
-		foreach ( $its as &$it ) {
-			_ensure_internal_link( $it );
-		}
+	foreach ( $its as &$it ) {
+		_ensure_post_id( $it, $args['internal_only'] );
 	}
 	$sub_keys = array( 'url', 'title', 'post_id' );
 	\wpinc\dia\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
 }
 
 /**
- * Ensures internal links.
+ * Ensures post IDs of internal links.
  *
- * @param array $it A link data.
+ * @param array $it            A link data.
+ * @param bool  $internal_only Whether to limit links to internal pages.
  */
-function _ensure_internal_link( array &$it ): void {
+function _ensure_post_id( array &$it, bool $internal_only ): void {
 	$pid = url_to_postid( $it['url'] );
 
 	if ( $it['post_id'] ) {
@@ -194,7 +196,7 @@ function _ensure_internal_link( array &$it ): void {
 			$url = get_permalink( (int) $it['post_id'] );
 			if ( $url ) {
 				$it['url'] = $url;
-			} else {
+			} elseif ( $internal_only ) {
 				$p = get_page_by_title( $it['title'] );
 				if ( null !== $p ) {
 					$it['url']     = get_permalink( $p->ID );
@@ -205,7 +207,7 @@ function _ensure_internal_link( array &$it ): void {
 	} else {
 		if ( $pid ) {
 			$it['post_id'] = $pid;
-		} else {
+		} elseif ( $internal_only ) {
 			$p = get_page_by_title( $it['title'] );
 			if ( null !== $p ) {
 				$it['url']     = get_permalink( $p->ID );
