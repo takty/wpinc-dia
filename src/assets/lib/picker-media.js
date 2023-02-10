@@ -2,7 +2,7 @@
  * Media Picker
  *
  * @author Takuto Yanagida
- * @version 2022-02-03
+ * @version 2023-02-10
  */
 
 window.wpinc     = window.wpinc ?? {}
@@ -10,7 +10,7 @@ window.wpinc.dia = window.wpinc.dia ?? {}
 
 window.wpinc.dia.setMediaPicker = function (elm, cls = false, fn = null, opts = {}) {
 	if (cls === false) cls = 'media';
-	opts = Object.assign({ multiple: false, type: '', parentGen: 1, title: false }, opts);
+	opts = Object.assign({ multiple: false, type: '', parentGen: -1, title: false }, opts);
 
 	const postId = document.getElementById('post_ID').value;
 	let cm = null;
@@ -20,13 +20,17 @@ window.wpinc.dia.setMediaPicker = function (elm, cls = false, fn = null, opts = 
 			wp.media.view.AttachmentsBrowser = AttachmentsBrowserCustom;
 			cm = createMedia(postId, opts.title === false ? e.target.innerText : opts.title, opts.multiple, opts.type);
 			cm.on('select', () => {
+				const p = (parentGen !== -1) ? getParent(e.target, opts.parentGen) : null;
+
 				if (opts.multiple) {
-					const fs = cm.state().get('selection');
+					const fs        = cm.state().get('selection');
 					const fileJsons = fs.map((f) => f.toJSON());
+					if (p) setItem(p, cls, fileJsons[0]);
 					if (fn) fn(e.target, fileJsons);
 				} else {
-					const f = cm.state().get('selection').first();
+					const f        = cm.state().get('selection').first();
 					const fileJson = f.toJSON();
+					if (p) setItem(p, cls, fileJson);
 					if (fn) fn(e.target, fileJson);
 				}
 			});
