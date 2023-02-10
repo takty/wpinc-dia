@@ -2,7 +2,7 @@
  * Link Picker
  *
  * @author Takuto Yanagida
- * @version 2022-06-16
+ * @version 2023-02-10
  */
 
 function wpinc_link_picker_init(key, internal_only = false, max_count = null, do_allow_url_hash = false, post_type = null) {
@@ -16,7 +16,7 @@ function wpinc_link_picker_init(key, internal_only = false, max_count = null, do
 
 	const picker_opts = {
 		isInternalOnly     : internal_only,
-		isLinkTargetAllowed: do_allow_url_hash,
+		isLinkTargetAllowed: false,
 		postType           : post_type
 	};
 
@@ -68,7 +68,7 @@ function wpinc_link_picker_init(key, internal_only = false, max_count = null, do
 		it.querySelector('*[data-key="url"]').value     = l.url;
 		it.querySelector('*[data-key="title"]').value   = l.title;
 		it.querySelector('*[data-key="post_id"]').value = '';
-		if (internal_only) {
+		if (internal_only && !do_allow_url_hash) {
 			it.querySelector('*[data-key="url"]').readOnly = true;
 		}
 	}

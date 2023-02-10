@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-11-15
+ * @version 2023-02-10
  */
 
 namespace wpinc\dia\link_picker;
@@ -114,8 +114,16 @@ function get_data( array $args, ?int $post_id = null ): array {
 			continue;
 		}
 		$url = get_permalink( (int) $it['post_id'] );
-		if ( false !== $url && $it['url'] !== $url ) {
-			$it['url'] = $url;
+		if ( false !== $url ) {
+			if ( $args['do_allow_url_hash'] ) {
+				$frag = wp_parse_url( $it['url'], PHP_URL_FRAGMENT );
+				if ( ! empty( $frag ) ) {
+					$url .= '#' . $frag;
+				}
+			}
+			if ( $it['url'] !== $url ) {
+				$it['url'] = $url;
+			}
 		}
 		$it += array(
 			'url'     => '',
@@ -172,7 +180,7 @@ function _save_data( array $args, int $post_id ) {
 	$its = array_values( $its );
 
 	foreach ( $its as &$it ) {
-		_ensure_post_id( $it, $args['internal_only'] );
+		_ensure_post_id( $it, $args['internal_only'], $args['do_allow_url_hash'] );
 	}
 	$sub_keys = array( 'url', 'title', 'post_id' );
 	\wpinc\dia\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
@@ -181,11 +189,20 @@ function _save_data( array $args, int $post_id ) {
 /**
  * Ensures post IDs of internal links.
  *
- * @param array $it            A link data.
- * @param bool  $internal_only Whether to limit links to internal pages.
+ * @param array $it                A link data.
+ * @param bool  $internal_only     Whether to limit links to internal pages.
+ * @param bool  $do_allow_url_hash Whether to allow URLs with a hash.
  */
-function _ensure_post_id( array &$it, bool $internal_only ): void {
+function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_hash ): void {
 	$pid = url_to_postid( $it['url'] );
+
+	$hash = '';
+	if ( $do_allow_url_hash ) {
+		$frag = wp_parse_url( $it['url'], PHP_URL_FRAGMENT );
+		if ( ! empty( $frag ) ) {
+			$hash = '#' . $frag;
+		}
+	}
 
 	if ( $it['post_id'] ) {
 		if ( $pid ) {
@@ -195,11 +212,11 @@ function _ensure_post_id( array &$it, bool $internal_only ): void {
 		} else {
 			$url = get_permalink( (int) $it['post_id'] );
 			if ( $url ) {
-				$it['url'] = $url;
+				$it['url'] = $url . $hash;
 			} elseif ( $internal_only ) {
 				$p = get_page_by_title( $it['title'] );
 				if ( null !== $p ) {
-					$it['url']     = get_permalink( $p->ID );
+					$it['url']     = get_permalink( $p->ID ) . $hash;
 					$it['post_id'] = $p->ID;
 				}
 			}
@@ -210,7 +227,7 @@ function _ensure_post_id( array &$it, bool $internal_only ): void {
 		} elseif ( $internal_only ) {
 			$p = get_page_by_title( $it['title'] );
 			if ( null !== $p ) {
-				$it['url']     = get_permalink( $p->ID );
+				$it['url']     = get_permalink( $p->ID ) . $hash;
 				$it['post_id'] = $p->ID;
 			}
 		}
@@ -326,7 +343,7 @@ function _output_item_row( array $args, array $it, string $cls ): void {
 	$title   = $it['title'] ?? '';
 	$post_id = $it['post_id'] ?? '';
 
-	$ro = $args['internal_only'] ? ' readonly' : '';
+	$ro = ( $args['internal_only'] && ! $args['do_allow_url_hash'] ) ? ' readonly' : '';
 	?>
 	<div class="<?php echo esc_attr( $cls ); ?>">
 		<div class="item-ctrl">
