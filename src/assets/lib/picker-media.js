@@ -2,7 +2,7 @@
  * Media Picker
  *
  * @author Takuto Yanagida
- * @version 2023-02-10
+ * @version 2023-03-06
  */
 
 window.wpinc     = window.wpinc ?? {}
@@ -20,7 +20,7 @@ window.wpinc.dia.setMediaPicker = function (elm, cls = false, fn = null, opts = 
 			wp.media.view.AttachmentsBrowser = AttachmentsBrowserCustom;
 			cm = createMedia(postId, opts.title === false ? e.target.innerText : opts.title, opts.multiple, opts.type);
 			cm.on('select', () => {
-				const p = (parentGen !== -1) ? getParent(e.target, opts.parentGen) : null;
+				const p = (opts.parentGen !== -1) ? getParent(e.target, opts.parentGen) : null;
 
 				if (opts.multiple) {
 					const fs        = cm.state().get('selection');

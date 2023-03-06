@@ -2,7 +2,7 @@
  * Link Picker
  *
  * @author Takuto Yanagida
- * @version 2023-02-10
+ * @version 2023-03-06
  */
 
 window.wpinc     = window.wpinc ?? {}
@@ -18,7 +18,7 @@ window.wpinc.dia.setLinkPicker = (function () {
 			if (elm.getAttribute('disabled')) return;
 			e.preventDefault();
 			createLink(f => {
-				const p = (parentGen !== -1) ? getParent(e.target, opts.parentGen) : null;
+				const p = (opts.parentGen !== -1) ? getParent(e.target, opts.parentGen) : null;
 				if (p) setItem(p, cls, f);
 				if (fn) fn(e.target, f);
 			}, opts.isInternalOnly, opts.isLinkTargetAllowed, opts.postType);
