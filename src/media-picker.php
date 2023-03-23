@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-14
+ * @version 2023-03-23
  */
 
 namespace wpinc\dia\media_picker;
@@ -194,7 +194,7 @@ function output_html( array $args, ?int $post_id = null ): void {
 
 	$script = sprintf(
 		'window.addEventListener("load", () => { wpinc_media_picker_init("%s"); });',
-		$key,
+		$key
 	);
 	?>
 	<div class="wpinc-dia-media-picker" id="<?php echo esc_attr( $key ); ?>">

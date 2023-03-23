@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-14
+ * @version 2023-03-23
  */
 
 namespace wpinc\dia\post_thumbnail;
@@ -160,7 +160,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	}
 	$script = sprintf(
 		'window.addEventListener("load", () => { wpinc_post_thumbnail_init("%s"); });',
-		$key,
+		$key
 	);
 	?>
 	<div class="wpinc-dia-post-thumbnail" id="<?php echo esc_attr( $key ); ?>">
