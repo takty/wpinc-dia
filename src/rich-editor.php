@@ -19,9 +19,15 @@ namespace wpinc\dia\rich_editor;
  */
 function _set_default_args( array $args ): array {
 	if ( isset( $args['key_postfix_title'] ) ) {
+		if ( WP_DEBUG ) {
+			trigger_error( 'Use key \'key_suffix_title\' instead.', E_USER_DEPRECATED );  // phpcs:ignore
+		}
 		$args['key_suffix_title'] = $args['key_postfix_title'];
 	}
 	if ( isset( $args['key_postfix_content'] ) ) {
+		if ( WP_DEBUG ) {
+			trigger_error( 'Use key \'key_suffix_content\' instead.', E_USER_DEPRECATED );  // phpcs:ignore
+		}
 		$args['key_suffix_content'] = $args['key_postfix_content'];
 	}
 	// phpcs:disable
