@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-02-02
+ * @version 2023-06-05
  */
 
 namespace wpinc\dia\rich_editor;
@@ -18,13 +18,19 @@ namespace wpinc\dia\rich_editor;
  * @return array Arguments.
  */
 function _set_default_args( array $args ): array {
+	if ( isset( $args['key_postfix_title'] ) ) {
+		$args['key_suffix_title'] = $args['key_postfix_title'];
+	}
+	if ( isset( $args['key_postfix_content'] ) ) {
+		$args['key_suffix_content'] = $args['key_postfix_content'];
+	}
 	// phpcs:disable
-	$args['type']                = $args['type']                ?? 'content';  // Or 'title_content'.
-	$args['key']                 = $args['key']                 ?? '';
-	$args['editor_option']       = $args['editor_option']       ?? array();
-	$args['key_postfix_title']   = $args['key_postfix_title']   ?? '_title';
-	$args['key_postfix_content'] = $args['key_postfix_content'] ?? '_content';
-	$args['label_title']         = $args['label_title']         ?? '';
+	$args['type']               = $args['type']               ?? 'content';  // Or 'title_content'.
+	$args['key']                = $args['key']                ?? '';
+	$args['editor_option']      = $args['editor_option']      ?? array();
+	$args['key_suffix_title']   = $args['key_suffix_title']   ?? '_title';
+	$args['key_suffix_content'] = $args['key_suffix_content'] ?? '_content';
+	$args['label_title']        = $args['label_title']        ?? '';
 	// phpcs:enable
 	return $args;
 }
@@ -71,10 +77,10 @@ function save_meta_box( array $args, int $post_id ): void {
 		return;
 	}
 	if ( 'title_content' === $args['type'] ) {
-		$key_t = $args['key'] . $args['key_postfix_title'];
+		$key_t = $args['key'] . $args['key_suffix_title'];
 		_set_post_meta_with_wp_filter( $post_id, $key_t, 'title_save_pre' );
 	}
-	$key = $args['key'] . $args['key_postfix_content'];
+	$key = $args['key'] . $args['key_suffix_content'];
 	_set_post_meta_with_wp_filter( $post_id, $key, 'content_save_pre' );
 }
 
@@ -94,7 +100,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	wp_nonce_field( $args['key'], "{$args['key']}_nonce" );
 
 	if ( 'title_content' === $args['type'] ) {
-		$key_t = $args['key'] . $args['key_postfix_title'];
+		$key_t = $args['key'] . $args['key_suffix_title'];
 		$title = get_post_meta( $post->ID, $key_t, true );
 
 		$sty = 'padding:3px 8px;font-size:1.7em;line-height:100%;height:1.7em;width:100%;outline:0;margin:0 0 6px;background-color:#fff;';
@@ -104,7 +110,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 		</div>
 		<?php
 	}
-	$key_c = $args['key'] . $args['key_postfix_content'];
+	$key_c = $args['key'] . $args['key_suffix_content'];
 	$cont  = get_post_meta( $post->ID, $key_c, true );
 	wp_editor( $cont, $key_c, $args['editor_option'] );
 }
