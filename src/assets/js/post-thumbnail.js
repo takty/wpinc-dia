@@ -2,7 +2,7 @@
  * Custom Post Thumbnail
  *
  * @author Takuto Yanagida
- * @version 2022-02-03
+ * @version 2023-06-06
  */
 
 function wpinc_post_thumbnail_init(key) {
@@ -13,7 +13,7 @@ function wpinc_post_thumbnail_init(key) {
 
 	const media_id = body.querySelector(`[name='${key}']`);
 
-	window.wpinc.dia.setMediaPicker(sel_btn, false, (t, f) => {
+	window.wpinc.dia.setMediaPicker(sel_btn, null, (t, f) => {
 		set_item(f);
 		del_btn.style.visibility = '';
 	}, { multiple: false, type: 'image', title: sel_btn.innerText });

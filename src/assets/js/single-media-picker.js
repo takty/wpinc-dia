@@ -2,7 +2,7 @@
  * Single Media Picker
  *
  * @author Takuto Yanagida
- * @version 2022-02-03
+ * @version 2023-06-06
  */
 
 function wpinc_single_media_picker_init(key) {
@@ -49,10 +49,10 @@ function wpinc_single_media_picker_init(key) {
 		});
 		function on_clicked(t, m) {
 			set_item(it, m);
-			it.style.display    = '';
+			it.style.display      = '';
 			add_row.style.display = 'none';
 		}
-		window.wpinc.dia.setMediaPicker(sel_btn, false, on_clicked, { multiple: false, title: sel_btn.innerText });
-		window.wpinc.dia.setMediaPicker(add_btn, false, on_clicked, { multiple: false, title: add_btn.innerText });
+		window.wpinc.dia.setMediaPicker(sel_btn, null, on_clicked, { multiple: false, title: sel_btn.innerText });
+		window.wpinc.dia.setMediaPicker(add_btn, null, on_clicked, { multiple: false, title: add_btn.innerText });
 	}
 }
