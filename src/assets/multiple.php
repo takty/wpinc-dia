@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2022-01-17
+ * @version 2023-06-23
  */
 
 namespace wpinc\dia;
@@ -125,7 +125,7 @@ function get_multiple_post_meta( int $post_id, string $base_key, array $keys, ?s
  * @param int         $post_id     Post ID.
  * @param string      $base_key    Base key of variable names.
  * @param array       $vals        Values.
- * @param array       $keys        Keys of variable names.
+ * @param array|null  $keys        Keys of variable names.
  * @param string|null $special_key (Optional) Special key.
  */
 function set_multiple_post_meta( int $post_id, string $base_key, array $vals, ?array $keys = null, ?string $special_key = null ): void {
