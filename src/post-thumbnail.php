@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-03-23
+ * @version 2023-06-23
  */
 
 namespace wpinc\dia\post_thumbnail;
@@ -135,7 +135,7 @@ function save_meta_box( array $args, int $post_id ): void {
 		return;
 	}
 	$media_id = (int) sanitize_text_field( wp_unslash( $_POST[ $args['key'] ] ?? '' ) );
-	_save_data( $key, $post_id, $media_id );
+	_save_data( $args, $post_id, $media_id );
 }
 
 
