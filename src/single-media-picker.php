@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-03-23
+ * @version 2023-07-26
  */
 
 namespace wpinc\dia\single_media_picker;
@@ -198,7 +198,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 		$key
 	);
 	?>
-	<div class="wpinc-dia-single-media-picker" id="<?php echo esc_attr( $key ); ?>">>
+	<div class="wpinc-dia-single-media-picker" id="<?php echo esc_attr( $key ); ?>">
 		<div class="item">
 			<div class="item-ctrl">
 				<button class="delete widget-control-remove"><?php echo esc_html_x( 'Remove', 'single media picker', 'wpinc_dia' ); ?></button>
