@@ -2,7 +2,7 @@
  * Single Media Picker
  *
  * @author Takuto Yanagida
- * @version 2023-06-06
+ * @version 2023-07-26
  */
 
 function wpinc_single_media_picker_init(key) {
@@ -12,7 +12,7 @@ function wpinc_single_media_picker_init(key) {
 
 	const item = body.getElementsByClassName('item')[0];
 
-	if (item.querySelector(`*[name='${key}[media]']`).value) {
+	if (item.querySelector(`*[name='${key}[media_id]']`).value) {
 		item.style.display    = '';
 		add_row.style.display = 'none';
 	} else {
@@ -26,11 +26,11 @@ function wpinc_single_media_picker_init(key) {
 
 
 	function set_item(it, f) {
-		it.querySelector(`*[name='${key}[media]']`).value    = f.id;
+		it.querySelector(`*[name='${key}[media_id]']`).value = f.id;
 		it.querySelector(`*[name='${key}[url]']`).value      = f.url;
 		it.querySelector(`*[name='${key}[title]']`).value    = f.title;
 		it.querySelector(`*[name='${key}[filename]']`).value = f.filename;
-		it.getElementsByClassName('filename')[0].innerText  = f.filename;
+		it.getElementsByClassName('filename')[0].innerText   = f.filename;
 	}
 
 	function assign_event_listener(it) {

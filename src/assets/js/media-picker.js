@@ -2,7 +2,7 @@
  * Media Picker
  *
  * @author Takuto Yanagida
- * @version 2023-06-06
+ * @version 2023-07-26
  */
 
 function wpinc_media_picker_init(key) {
@@ -56,7 +56,7 @@ function wpinc_media_picker_init(key) {
 	}
 
 	function set_item(it, f) {
-		it.querySelector(`*[data-key='media']`).value      = f.id;
+		it.querySelector(`*[data-key='media_id']`).value   = f.id;
 		it.querySelector(`*[data-key='url']`).value        = f.url;
 		it.querySelector(`*[data-key='title']`).value      = f.title;
 		it.querySelector(`*[data-key='filename']`).value   = f.filename;
