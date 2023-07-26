@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-03-23
+ * @version 2023-07-26
  */
 
 namespace wpinc\dia\media_picker;
@@ -177,7 +177,7 @@ function save_meta_box( array $args, int $post_id ): void {
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
-	output_html( $post->ID );
+	output_html( $args, $post->ID );
 }
 
 /**
