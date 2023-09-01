@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-07-26
+ * @version 2023-09-01
  */
 
 namespace wpinc\dia\media_picker;
@@ -15,7 +15,7 @@ require_once __DIR__ . '/assets/asset-url.php';
 /**
  * Initializes single media picker.
  *
- * @param array $args {
+ * @param array<string, mixed> $args {
  *     (Optional) An array of arguments.
  *
  *     @type string 'url_to'         URL to this script.
@@ -40,7 +40,7 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), '1.0', true );
 				wp_enqueue_script( 'wpinc-dia-media-picker', \wpinc\abs_url( $url_to, './assets/js/media-picker.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
 				wp_enqueue_style( 'wpinc-dia-media-picker', \wpinc\abs_url( $url_to, './assets/css/media-picker.min.css' ), array(), '1.0' );
 			}
@@ -53,8 +53,8 @@ function _register_script( string $url_to ): void {
  *
  * @access private
  *
- * @param array $args Array of arguments.
- * @return array Arguments.
+ * @param array<string, mixed> $args Array of arguments.
+ * @return array<string, mixed> Arguments.
  */
 function _set_default_args( array $args ): array {
 	// phpcs:disable
@@ -71,17 +71,20 @@ function _set_default_args( array $args ): array {
 /**
  * Retrieves the media data.
  *
- * @param array    $args    Array of arguments.
- * @param int|null $post_id Post ID.
- * @return array Media data.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int|null             $post_id Post ID.
+ * @return array<string, mixed>[]|null Media data.
  */
-function get_data( array $args, ?int $post_id = null ): array {
+function get_data( array $args, ?int $post_id = null ): ?array {
 	$args = _set_default_args( $args );
 	if ( null === $post_id ) {
 		$post_id = get_the_ID();
+		if ( ! $post_id ) {
+			return null;
+		}
 	}
 	$sub_keys = array( 'media_id', 'url', 'title', 'filename' );
-	$its      = \wpinc\dia\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
+	$its      = \wpinc\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
 	foreach ( $its as &$it ) {
 		$it += array(
 			'url'      => '',
@@ -97,13 +100,13 @@ function get_data( array $args, ?int $post_id = null ): array {
  *
  * @access private
  *
- * @param array $args     Array of arguments.
- * @param int   $post_id  Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int                  $post_id Post ID.
  */
-function _save_data( array $args, int $post_id ) {
+function _save_data( array $args, int $post_id ): void {
 	$sub_keys = array( 'media_id', 'url', 'title', 'filename', 'delete' );
 
-	$its = \wpinc\dia\get_multiple_post_meta_from_env( $args['key'], $sub_keys );
+	$its = \wpinc\get_multiple_post_meta_from_env( $args['key'], $sub_keys );
 	$its = array_filter(
 		$its,
 		function ( $it ) {
@@ -113,7 +116,7 @@ function _save_data( array $args, int $post_id ) {
 	$its = array_values( $its );
 
 	$sub_keys = array( 'media_id', 'url', 'title', 'filename' );
-	\wpinc\dia\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
+	\wpinc\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
 }
 
 
@@ -123,11 +126,11 @@ function _save_data( array $args, int $post_id ) {
 /**
  * Adds the meta box to template admin screen.
  *
- * @param array   $args     Array of arguments.
- * @param string  $title    Title of the meta box.
- * @param ?string $screen   (Optional) The screen or screens on which to show the box.
- * @param string  $context  (Optional) The context within the screen where the box should display.
- * @param string  $priority (Optional) The priority within the context where the box should show.
+ * @param array<string, mixed>          $args     Array of arguments.
+ * @param string                        $title    Title of the meta box.
+ * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
+ * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
+ * @param 'core'|'default'|'high'|'low' $priority (Optional) The priority within the context where the box should show.
  */
 function add_meta_box( array $args, string $title, ?string $screen = null, string $context = 'advanced', string $priority = 'default' ): void {
 	$args = _set_default_args( $args );
@@ -146,8 +149,8 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 /**
  * Stores the data of the meta box on template admin screen.
  *
- * @param array $args    Array of arguments.
- * @param int   $post_id Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int                  $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
@@ -171,8 +174,8 @@ function save_meta_box( array $args, int $post_id ): void {
  *
  * @access private
  *
- * @param array    $args Array of arguments.
- * @param \WP_Post $post Current post.
+ * @param array<string, mixed> $args Array of arguments.
+ * @param \WP_Post             $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
@@ -185,8 +188,8 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
  *
  * @access private
  *
- * @param array    $args    Array of arguments.
- * @param int|null $post_id Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int|null             $post_id Post ID.
  */
 function output_html( array $args, ?int $post_id = null ): void {
 	$key = $args['key'];
@@ -201,8 +204,10 @@ function output_html( array $args, ?int $post_id = null ): void {
 		<div class="table">
 	<?php
 	_output_item_row( $args, array(), 'template' );
-	foreach ( $its as $it ) {
-		_output_item_row( $args, $it );
+	if ( $its ) {
+		foreach ( $its as $it ) {
+			_output_item_row( $args, $it );
+		}
 	}
 	?>
 			<div class="add-row">
@@ -219,9 +224,9 @@ function output_html( array $args, ?int $post_id = null ): void {
  *
  * @access private
  *
- * @param array  $args Array of arguments.
- * @param array  $it   An item.
- * @param string $cls  CSS class.
+ * @param array<string, mixed> $args Array of arguments.
+ * @param array<string, mixed> $it   An item.
+ * @param string               $cls  CSS class.
  */
 function _output_item_row( array $args, array $it, string $cls = '' ): void {
 	$key = $args['key'];

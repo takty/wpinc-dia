@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-07-26
+ * @version 2023-09-01
  */
 
 namespace wpinc\dia\single_media_picker;
@@ -14,12 +14,12 @@ require_once __DIR__ . '/assets/asset-url.php';
 /**
  * Initializes single media picker.
  *
- * @param array $args {
+ * @param array<string, mixed> $args {
  *     (Optional) An array of arguments.
  *
  *     @type string 'url_to'         URL to this script.
  *     @type string 'key'            Meta key.
- *     @type string 'title_editable' Whether the title is editable.
+ *     @type bool   'title_editable' Whether the title is editable.
  * }
  */
 function initialize( array $args = array() ): void {
@@ -39,7 +39,7 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-picker-media', \wpinc\abs_url( $url_to, './assets/lib/picker-media.min.js' ), array(), '1.0', true );
 				wp_enqueue_script( 'wpinc-dia-single-media-picker', \wpinc\abs_url( $url_to, './assets/js/single-media-picker.min.js' ), array( 'wpinc-dia-picker-media' ), '1.0', false );
 				wp_enqueue_style( 'wpinc-dia-single-media-picker', \wpinc\abs_url( $url_to, './assets/css/single-media-picker.min.css' ), array(), '1.0' );
 			}
@@ -52,8 +52,8 @@ function _register_script( string $url_to ): void {
  *
  * @access private
  *
- * @param array $args Array of arguments.
- * @return array Arguments.
+ * @param array<string, mixed> $args Array of arguments.
+ * @return array<string, mixed> Arguments.
  */
 function _set_default_args( array $args ): array {
 	// phpcs:disable
@@ -68,16 +68,19 @@ function _set_default_args( array $args ): array {
 
 
 /**
- * Retrieves the duration data.
+ * Retrieves the media data.
  *
- * @param array    $args    Array of arguments.
- * @param int|null $post_id Post ID.
- * @return array Duration data.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int|null             $post_id Post ID.
+ * @return array<string, mixed>|null Media data.
  */
-function get_data( array $args, ?int $post_id = null ): array {
+function get_data( array $args, ?int $post_id = null ): ?array {
 	$args = _set_default_args( $args );
 	if ( null === $post_id ) {
 		$post_id = get_the_ID();
+		if ( ! $post_id ) {
+			return null;
+		}
 	}
 	$json = get_post_meta( $post_id, $args['key'], true );
 	$vals = json_decode( $json, true );
@@ -89,16 +92,16 @@ function get_data( array $args, ?int $post_id = null ): array {
 }
 
 /**
- * Stores the duration data.
+ * Stores the media data.
  *
  * @access private
  *
- * @param array  $args     Array of arguments.
- * @param int    $post_id  Post ID.
- * @param int    $media_id Media ID.
- * @param string $url      URL.
- * @param string $title    Title.
- * @param string $filename File name.
+ * @param array<string, mixed> $args     Array of arguments.
+ * @param int                  $post_id  Post ID.
+ * @param int                  $media_id Media ID.
+ * @param string               $url      URL.
+ * @param string               $title    Title.
+ * @param string               $filename File name.
  */
 function _save_data( array $args, int $post_id, int $media_id, string $url, string $title, string $filename ): void {
 	if ( $media_id ) {
@@ -110,7 +113,9 @@ function _save_data( array $args, int $post_id, int $media_id, string $url, stri
 			}
 		);
 		$json = wp_json_encode( $vals, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
-		update_post_meta( $post_id, $args['key'], addslashes( $json ) );  // Because the meta value is passed through the stripslashes() function upon being stored.
+		if ( false !== $json ) {
+			update_post_meta( $post_id, $args['key'], addslashes( $json ) );  // Because the meta value is passed through the stripslashes() function upon being stored.
+		}
 	} else {
 		delete_post_meta( $post_id, $args['key'] );
 	}
@@ -123,11 +128,11 @@ function _save_data( array $args, int $post_id, int $media_id, string $url, stri
 /**
  * Adds the meta box to template admin screen.
  *
- * @param array   $args     Array of arguments.
- * @param string  $title    Title of the meta box.
- * @param ?string $screen   (Optional) The screen or screens on which to show the box.
- * @param string  $context  (Optional) The context within the screen where the box should display.
- * @param string  $priority (Optional) The priority within the context where the box should show.
+ * @param array<string, mixed>          $args     Array of arguments.
+ * @param string                        $title    Title of the meta box.
+ * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
+ * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
+ * @param 'core'|'default'|'high'|'low' $priority (Optional) The priority within the context where the box should show.
  */
 function add_meta_box( array $args, string $title, ?string $screen = null, string $context = 'advanced', string $priority = 'default' ): void {
 	$args = _set_default_args( $args );
@@ -146,8 +151,8 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 /**
  * Stores the data of the meta box on template admin screen.
  *
- * @param array $args    Array of arguments.
- * @param int   $post_id Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int                  $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
@@ -177,8 +182,8 @@ function save_meta_box( array $args, int $post_id ): void {
  *
  * @access private
  *
- * @param array    $args Array of arguments.
- * @param \WP_Post $post Current post.
+ * @param array<string, mixed> $args Array of arguments.
+ * @param \WP_Post             $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
@@ -186,10 +191,10 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 
 	$it = get_data( $args, $post->ID );
 
-	$media_id = $it['media_id'];
-	$url      = $it['url'];
-	$title    = $it['title'];
-	$filename = $it['filename'];
+	$media_id = $it ? $it['media_id'] : 0;
+	$url      = $it ? $it['url'] : '';
+	$title    = $it ? $it['title'] : '';
+	$filename = $it ? $it['filename'] : '';
 
 	$ro = $args['title_editable'] ? '' : ' readonly';
 

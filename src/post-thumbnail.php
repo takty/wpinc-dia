@@ -4,15 +4,15 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-06-23
+ * @version 2023-09-01
  */
 
 namespace wpinc\dia\post_thumbnail;
 
 /**
- * Initializes duration picker.
+ * Initializes media picker.
  *
- * @param array $args {
+ * @param array<string, mixed> $args {
  *     (Optional) An array of arguments.
  *
  *     @type string 'url_to' URL to this script.
@@ -49,8 +49,8 @@ function _register_script( string $url_to ): void {
  *
  * @access private
  *
- * @param array $args Array of arguments.
- * @return array Arguments.
+ * @param array<string, mixed> $args Array of arguments.
+ * @return array<string, mixed> Arguments.
  */
 function _set_default_args( array $args ): array {
 	$args['key'] = $args['key'] ?? '';
@@ -62,28 +62,31 @@ function _set_default_args( array $args ): array {
 
 
 /**
- * Retrieves duration data.
+ * Retrieves media data.
  *
- * @param array    $args    Array of arguments.
- * @param int|null $post_id Post ID.
- * @return int Media ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int|null             $post_id Post ID.
+ * @return int|null Media ID.
  */
-function get_data( array $args, ?int $post_id = null ): int {
+function get_data( array $args, ?int $post_id = null ): ?int {
 	$args = _set_default_args( $args );
 	if ( null === $post_id ) {
 		$post_id = get_the_ID();
+		if ( ! $post_id ) {
+			return null;
+		}
 	}
 	return (int) get_post_meta( $post_id, $args['key'], true );
 }
 
 /**
- * Stores the data of duration.
+ * Stores the data of media.
  *
  * @access private
  *
- * @param array $args     Array of arguments.
- * @param int   $post_id  Post ID.
- * @param int   $media_id Media ID.
+ * @param array<string, mixed> $args     Array of arguments.
+ * @param int                  $post_id  Post ID.
+ * @param int                  $media_id Media ID.
  */
 function _save_data( array $args, int $post_id, int $media_id ): void {
 	if ( $media_id ) {
@@ -100,11 +103,11 @@ function _save_data( array $args, int $post_id, int $media_id ): void {
 /**
  * Adds the meta box to template admin screen.
  *
- * @param array   $args     Array of arguments.
- * @param string  $title    Title of the meta box.
- * @param ?string $screen   (Optional) The screen or screens on which to show the box.
- * @param string  $context  (Optional) The context within the screen where the box should display.
- * @param string  $priority (Optional) The priority within the context where the box should show.
+ * @param array<string, mixed>          $args     Array of arguments.
+ * @param string                        $title    Title of the meta box.
+ * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
+ * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
+ * @param 'core'|'default'|'high'|'low' $priority (Optional) The priority within the context where the box should show.
  */
 function add_meta_box( array $args, string $title, ?string $screen = null, string $context = 'side', string $priority = 'default' ): void {
 	$args = _set_default_args( $args );
@@ -123,8 +126,8 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 /**
  * Stores the data of the meta box on template admin screen.
  *
- * @param array $args    Array of arguments.
- * @param int   $post_id Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int                  $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
@@ -147,8 +150,8 @@ function save_meta_box( array $args, int $post_id ): void {
  *
  * @access private
  *
- * @param array    $args Array of arguments.
- * @param \WP_Post $post Current post.
+ * @param array<string, mixed> $args Array of arguments.
+ * @param \WP_Post             $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	wp_nonce_field( $args['key'], "{$args['key']}_nonce" );
@@ -156,7 +159,8 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 
 	if ( $it ) {
-		$src = wp_get_attachment_image_src( $it, 'medium' )[0];
+		$tmp = wp_get_attachment_image_src( $it, 'medium' );
+		$src = ( false === $tmp ) ? '' : $tmp[0];
 	}
 	$script = sprintf(
 		'window.addEventListener("load", () => { wpinc_post_thumbnail_init("%s"); });',
@@ -173,7 +177,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 			<button class="delete widget-control-remove"><?php echo esc_html_x( 'Remove', 'post thumbnail', 'wpinc_dia' ); ?></button>
 			<button class="select button"><?php echo esc_html_x( 'Select', 'post thumbnail', 'wpinc_dia' ); ?></button>
 		</div>
-		<input type="hidden" name="<?php echo esc_attr( $key ); ?> value="<?php echo esc_attr( $it ); ?>">
+		<input type="hidden" name="<?php echo esc_attr( $key ); ?> value="<?php echo esc_attr( (string) $it ); ?>">
 		<script><?php echo $script;  // phpcs:ignore ?></script>
 	</div>
 	<?php

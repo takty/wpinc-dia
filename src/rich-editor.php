@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-06-05
+ * @version 2023-08-30
  */
 
 namespace wpinc\dia\rich_editor;
@@ -14,8 +14,8 @@ namespace wpinc\dia\rich_editor;
  *
  * @access private
  *
- * @param array $args Array of arguments.
- * @return array Arguments.
+ * @param array<string, mixed> $args Array of arguments.
+ * @return array<string, mixed> Arguments.
  */
 function _set_default_args( array $args ): array {
 	if ( isset( $args['key_postfix_title'] ) ) {
@@ -48,11 +48,11 @@ function _set_default_args( array $args ): array {
 /**
  * Adds the meta box to template admin screen.
  *
- * @param array   $args     Array of arguments.
- * @param string  $title    Title of the meta box.
- * @param ?string $screen   (Optional) The screen or screens on which to show the box.
- * @param string  $context  (Optional) The context within the screen where the box should display.
- * @param string  $priority (Optional) The priority within the context where the box should show.
+ * @param array<string, mixed>          $args     Array of arguments.
+ * @param string                        $title    Title of the meta box.
+ * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
+ * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
+ * @param 'core'|'default'|'high'|'low' $priority (Optional) The priority within the context where the box should show.
  */
 function add_meta_box( array $args, string $title, ?string $screen = null, string $context = 'advanced', string $priority = 'default' ): void {
 	$args = _set_default_args( $args );
@@ -71,8 +71,8 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 /**
  * Stores the data of the meta box on template admin screen.
  *
- * @param array $args    Array of arguments.
- * @param int   $post_id Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int                  $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
@@ -99,8 +99,8 @@ function save_meta_box( array $args, int $post_id ): void {
  *
  * @access private
  *
- * @param array    $args Array of arguments.
- * @param \WP_Post $post Current post.
+ * @param array<string, mixed> $args Array of arguments.
+ * @param \WP_Post             $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	wp_nonce_field( $args['key'], "{$args['key']}_nonce" );

@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-02-10
+ * @version 2023-09-01
  */
 
 namespace wpinc\dia\link_picker;
@@ -29,16 +29,16 @@ add_filter(
 /**
  * Initializes single link picker.
  *
- * @param array $args {
+ * @param array<string, mixed> $args {
  *     (Optional) An array of arguments.
  *
- *     @type string 'url_to'            URL to this script.
- *     @type string 'key'               Meta key.
- *     @type bool   'do_allow_url_hash' Whether to allow URL with hash. Default false.
- *     @type bool   'internal_only'     Whether to limit the target to internal URLs. Default false.
- *     @type int    'max_count'         Maximum count. Default null.
- *     @type string 'post_type'         Post types. Default ''.
- *     @type string 'message_label'     Message label. Default ''.
+ *     @type string          'url_to'            URL to this script.
+ *     @type string          'key'               Meta key.
+ *     @type bool            'do_allow_url_hash' Whether to allow URL with hash. Default false.
+ *     @type bool            'internal_only'     Whether to limit the target to internal URLs. Default false.
+ *     @type int|null        'max_count'         Maximum count. Default null.
+ *     @type string|string[] 'post_type'         Post types. Default ''.
+ *     @type string          'message_label'     Message label. Default ''.
  * }
  */
 function initialize( array $args = array() ): void {
@@ -58,7 +58,7 @@ function _register_script( string $url_to ): void {
 		add_action(
 			'admin_enqueue_scripts',
 			function () use ( $url_to ) {
-				wp_enqueue_script( 'wpinc-dia-picker-link', \wpinc\abs_url( $url_to, './assets/lib/picker-link.min.js' ), array(), 1.0, true );
+				wp_enqueue_script( 'wpinc-dia-picker-link', \wpinc\abs_url( $url_to, './assets/lib/picker-link.min.js' ), array(), '1.0', true );
 				wp_enqueue_script( 'wpinc-dia-link-picker', \wpinc\abs_url( $url_to, './assets/js/link-picker.min.js' ), array( 'wpinc-dia-picker-link' ), '1.0', false );
 				wp_enqueue_style( 'wpinc-dia-link-picker', \wpinc\abs_url( $url_to, './assets/css/link-picker.min.css' ), array(), '1.0' );
 			}
@@ -71,8 +71,8 @@ function _register_script( string $url_to ): void {
  *
  * @access private
  *
- * @param array $args Array of arguments.
- * @return array Arguments.
+ * @param array<string, mixed> $args Array of arguments.
+ * @return array<string, mixed> Arguments.
  */
 function _set_default_args( array $args ): array {
 	// phpcs:disable
@@ -97,24 +97,27 @@ function _set_default_args( array $args ): array {
 /**
  * Retrieves the link data.
  *
- * @param array    $args    Array of arguments.
- * @param int|null $post_id Post ID.
- * @return array Media data.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int|null             $post_id Post ID.
+ * @return array<string, mixed>[]|null Media data.
  */
-function get_data( array $args, ?int $post_id = null ): array {
+function get_data( array $args, ?int $post_id = null ): ?array {
 	$args = _set_default_args( $args );
 	if ( null === $post_id ) {
 		$post_id = get_the_ID();
+		if ( ! $post_id ) {
+			return null;
+		}
 	}
 	$sub_keys = array( 'url', 'title', 'post_id' );
-	$its      = \wpinc\dia\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
+	$its      = \wpinc\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
 
 	foreach ( $its as &$it ) {
 		if ( ! is_numeric( $it['post_id'] ) ) {
 			continue;
 		}
 		$url = get_permalink( (int) $it['post_id'] );
-		if ( false !== $url ) {
+		if ( $url ) {
 			if ( $args['do_allow_url_hash'] ) {
 				$frag = wp_parse_url( $it['url'], PHP_URL_FRAGMENT );
 				if ( ! empty( $frag ) ) {
@@ -139,22 +142,25 @@ function get_data( array $args, ?int $post_id = null ): array {
 /**
  * Retrieves the posts of the links.
  *
- * @param array    $args             Array of arguments.
- * @param int|null $post_id          Post ID.
- * @param bool     $skip_except_post (Optional) Whether to skip links except posts. Default true.
+ * @param array<string, mixed> $args             Array of arguments.
+ * @param int|null             $post_id          Post ID.
+ * @param bool                 $skip_except_post (Optional) Whether to skip links except posts. Default true.
+ * @return array<\WP_Post|null> Posts.
  */
 function get_posts( array $args, ?int $post_id = null, bool $skip_except_post = true ): array {
 	$its = get_data( $args, $post_id );
 	$ps  = array();
-	foreach ( $its as $it ) {
-		if ( ! is_numeric( $it['post_id'] ) ) {
-			continue;
+	if ( $its ) {
+		foreach ( $its as $it ) {
+			if ( ! is_numeric( $it['post_id'] ) ) {
+				continue;
+			}
+			$p = get_post( (int) $it['post_id'] );
+			if ( $skip_except_post && null === $p ) {
+				continue;
+			}
+			$ps[] = $p;
 		}
-		$p = get_post( $it['post_id'] );
-		if ( $skip_except_post && null === $p ) {
-			continue;
-		}
-		$ps[] = $p;
 	}
 	return $ps;
 }
@@ -164,13 +170,13 @@ function get_posts( array $args, ?int $post_id = null, bool $skip_except_post = 
  *
  * @access private
  *
- * @param array $args     Array of arguments.
- * @param int   $post_id  Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int                  $post_id Post ID.
  */
-function _save_data( array $args, int $post_id ) {
+function _save_data( array $args, int $post_id ): void {
 	$sub_keys = array( 'url', 'title', 'post_id', 'delete' );
 
-	$its = \wpinc\dia\get_multiple_post_meta_from_env( $args['key'], $sub_keys );
+	$its = \wpinc\get_multiple_post_meta_from_env( $args['key'], $sub_keys );
 	$its = array_filter(
 		$its,
 		function ( $it ) {
@@ -183,15 +189,15 @@ function _save_data( array $args, int $post_id ) {
 		_ensure_post_id( $it, $args['internal_only'], $args['do_allow_url_hash'] );
 	}
 	$sub_keys = array( 'url', 'title', 'post_id' );
-	\wpinc\dia\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
+	\wpinc\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
 }
 
 /**
  * Ensures post IDs of internal links.
  *
- * @param array $it                A link data.
- * @param bool  $internal_only     Whether to limit links to internal pages.
- * @param bool  $do_allow_url_hash Whether to allow URLs with a hash.
+ * @param array<string, mixed> $it                A link data.
+ * @param bool                 $internal_only     Whether to limit links to internal pages.
+ * @param bool                 $do_allow_url_hash Whether to allow URLs with a hash.
  */
 function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_hash ): void {
 	$pid = url_to_postid( $it['url'] );
@@ -214,9 +220,9 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 			if ( $url ) {
 				$it['url'] = $url . $hash;
 			} elseif ( $internal_only ) {
-				$p = get_page_by_title( $it['title'] );
+				$p = _get_page_by_title( $it['title'] );
 				if ( null !== $p ) {
-					$it['url']     = get_permalink( $p->ID ) . $hash;
+					$it['url']     = get_permalink( $p ) . $hash;
 					$it['post_id'] = $p->ID;
 				}
 			}
@@ -225,13 +231,38 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 		if ( $pid ) {
 			$it['post_id'] = $pid;
 		} elseif ( $internal_only ) {
-			$p = get_page_by_title( $it['title'] );
+			$p = _get_page_by_title( $it['title'] );
 			if ( null !== $p ) {
-				$it['url']     = get_permalink( $p->ID ) . $hash;
+				$it['url']     = get_permalink( $p ) . $hash;
 				$it['post_id'] = $p->ID;
 			}
 		}
 	}
+}
+
+/**
+ * Retrieves a page given its title.
+ *
+ * @param string $page_title Page title.
+ * @return \WP_Post|null WP_Post on success, or null on failure.
+ */
+function _get_page_by_title( string $page_title ) {
+	$ps = get_posts(
+		array(
+			'post_type'              => 'page',
+			'title'                  => $page_title,
+			'post_status'            => 'all',
+			'posts_per_page'         => 1,
+			'update_post_term_cache' => false,
+			'update_post_meta_cache' => false,
+			'orderby'                => 'date ID',
+			'order'                  => 'ASC',
+		)
+	);
+	if ( empty( $ps ) ) {
+		return null;
+	}
+	return $ps[0];
 }
 
 
@@ -241,11 +272,11 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 /**
  * Adds the meta box to template admin screen.
  *
- * @param array   $args     Array of arguments.
- * @param string  $title    Title of the meta box.
- * @param ?string $screen   (Optional) The screen or screens on which to show the box.
- * @param string  $context  (Optional) The context within the screen where the box should display.
- * @param string  $priority (Optional) The priority within the context where the box should show.
+ * @param array<string, mixed>          $args     Array of arguments.
+ * @param string                        $title    Title of the meta box.
+ * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
+ * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
+ * @param 'core'|'default'|'high'|'low' $priority (Optional) The priority within the context where the box should show.
  */
 function add_meta_box( array $args, string $title, ?string $screen = null, string $context = 'advanced', string $priority = 'default' ): void {
 	$args = _set_default_args( $args );
@@ -264,8 +295,8 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 /**
  * Stores the data of the meta box on template admin screen.
  *
- * @param array $args    Array of arguments.
- * @param int   $post_id Post ID.
+ * @param array<string, mixed> $args    Array of arguments.
+ * @param int                  $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
@@ -289,22 +320,22 @@ function save_meta_box( array $args, int $post_id ): void {
  *
  * @access private
  *
- * @param array    $args Array of arguments.
- * @param \WP_Post $post Current post.
+ * @param array<string, mixed> $args Array of arguments.
+ * @param \WP_Post             $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
 
 	$its = get_data( $args, $post->ID );
-	if ( $args['max_count'] ) {
+	if ( $its && $args['max_count'] ) {
 		$its = array_slice( $its, 0, min( $args['max_count'], count( $its ) ) );
 	}
 	$script = sprintf(
 		'window.addEventListener("load", () => { wpinc_link_picker_init("%s", %s, %s, %s, %s); });',
 		$key,
 		$args['internal_only'] ? 'true' : 'false',
-		$args['max_count'] ? strval( $args['max_count'] ) : 'null',
+		$args['max_count'] ? (string) $args['max_count'] : 'null',
 		$args['do_allow_url_hash'] ? 'true' : 'false',
 		$args['post_type'] ? ( '"' . esc_html( $args['post_type'] ) . '"' ) : 'null'
 	);
@@ -313,8 +344,10 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 		<div class="table">
 	<?php
 	_output_item_row( $args, array(), 'item-template' );
-	foreach ( $its as $it ) {
-		_output_item_row( $args, $it, 'item' );
+	if ( $its ) {
+		foreach ( $its as $it ) {
+			_output_item_row( $args, $it, 'item' );
+		}
 	}
 	?>
 			<div class="add-row">
@@ -332,9 +365,9 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
  *
  * @access private
  *
- * @param array  $args Array of arguments.
- * @param array  $it   An item.
- * @param string $cls  CSS class.
+ * @param array<string, mixed> $args Array of arguments.
+ * @param array<string, mixed> $it   An item.
+ * @param string               $cls  CSS class.
  */
 function _output_item_row( array $args, array $it, string $cls ): void {
 	$key = $args['key'];
