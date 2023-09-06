@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-01
+ * @version 2023-09-06
  */
 
 namespace wpinc\dia\link_picker;
@@ -27,7 +27,7 @@ add_filter(
 );
 
 /**
- * Initializes single link picker.
+ * Initializes link picker.
  *
  * @param array<string, mixed> $args {
  *     (Optional) An array of arguments.

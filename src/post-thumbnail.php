@@ -4,13 +4,13 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-01
+ * @version 2023-09-06
  */
 
 namespace wpinc\dia\post_thumbnail;
 
 /**
- * Initializes media picker.
+ * Initializes post thumbnail picker.
  *
  * @param array<string, mixed> $args {
  *     (Optional) An array of arguments.
@@ -62,7 +62,7 @@ function _set_default_args( array $args ): array {
 
 
 /**
- * Retrieves media data.
+ * Retrieves post thumbnail data.
  *
  * @param array<string, mixed> $args    Array of arguments.
  * @param int|null             $post_id Post ID.
@@ -80,7 +80,7 @@ function get_data( array $args, ?int $post_id = null ): ?int {
 }
 
 /**
- * Stores the data of media.
+ * Stores the data of post thumbnail.
  *
  * @access private
  *

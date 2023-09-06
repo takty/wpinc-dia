@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-01
+ * @version 2023-09-06
  */
 
 namespace wpinc\dia\media_picker;
@@ -13,7 +13,7 @@ require_once __DIR__ . '/assets/multiple.php';
 require_once __DIR__ . '/assets/asset-url.php';
 
 /**
- * Initializes single media picker.
+ * Initializes media picker.
  *
  * @param array<string, mixed> $args {
  *     (Optional) An array of arguments.
