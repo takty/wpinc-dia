@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-06
+ * @version 2023-09-19
  */
 
 namespace wpinc\dia\media_picker;
@@ -229,8 +229,6 @@ function output_html( array $args, ?int $post_id = null ): void {
  * @param string               $cls  CSS class.
  */
 function _output_item_row( array $args, array $it, string $cls = '' ): void {
-	$key = $args['key'];
-
 	$media_id = $it['media_id'] ?? '';
 	$url      = $it['url'] ?? '';
 	$title    = $it['title'] ?? '';

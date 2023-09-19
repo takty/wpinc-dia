@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-06
+ * @version 2023-09-19
  */
 
 namespace wpinc\dia\link_picker;
@@ -370,8 +370,6 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
  * @param string               $cls  CSS class.
  */
 function _output_item_row( array $args, array $it, string $cls ): void {
-	$key = $args['key'];
-
 	$url     = $it['url'] ?? '';
 	$title   = $it['title'] ?? '';
 	$post_id = $it['post_id'] ?? '';
