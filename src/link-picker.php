@@ -4,8 +4,10 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-19
+ * @version 2023-11-05
  */
+
+declare(strict_types=1);
 
 namespace wpinc\dia\link_picker;
 
@@ -18,7 +20,10 @@ require_once __DIR__ . '/assets/asset-url.php';
 add_filter(
 	'wp_link_query_args',
 	function ( $query ) {
-		$pts = sanitize_text_field( wp_unslash( $_POST['link_picker_pt'] ?? '' ) );  // phpcs:ignore
+		$pts_r = $_POST['link_picker_pt'] ?? null;  // phpcs:ignore
+		$pts_r = is_string( $pts_r ) ? $pts_r : '';
+
+		$pts = sanitize_text_field( wp_unslash( $pts_r ) );
 		if ( $pts ) {
 			$query['post_type'] = explode( ',', $pts );
 		}
@@ -26,14 +31,25 @@ add_filter(
 	}
 );
 
-/**
+/** phpcs:ignore
  * Initializes link picker.
  *
- * @param array<string, mixed> $args {
- *     (Optional) An array of arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key               : non-empty-string,
+ *     url_to?           : string,
+ *     do_allow_url_hash?: bool,
+ *     internal_only?    : bool,
+ *     max_count?        : int|null,
+ *     post_type?        : string|string[],
+ *     message_label?    : string,
+ * } $args An array of arguments.
  *
- *     @type string          'url_to'            URL to this script.
+ * $args {
+ *     An array of arguments.
+ *
  *     @type string          'key'               Meta key.
+ *     @type string          'url_to'            URL to this script.
  *     @type bool            'do_allow_url_hash' Whether to allow URL with hash. Default false.
  *     @type bool            'internal_only'     Whether to limit the target to internal URLs. Default false.
  *     @type int|null        'max_count'         Maximum count. Default null.
@@ -41,7 +57,7 @@ add_filter(
  *     @type string          'message_label'     Message label. Default ''.
  * }
  */
-function initialize( array $args = array() ): void {
+function initialize( array $args ): void {
 	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\get_file_uri( __DIR__ ) );
 	_register_script( $url_to );
 }
@@ -66,17 +82,32 @@ function _register_script( string $url_to ): void {
 	}
 }
 
-/**
+/** phpcs:ignore
  * Assign default arguments.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @return array<string, mixed> Arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key               : non-empty-string,
+ *     url_to?           : string,
+ *     do_allow_url_hash?: bool,
+ *     internal_only?    : bool,
+ *     max_count?        : int|null,
+ *     post_type?        : string|string[],
+ *     message_label?    : string,
+ * } $args An array of arguments.
+ * @return array{
+ *     key              : non-empty-string,
+ *     url_to?          : string,
+ *     do_allow_url_hash: bool,
+ *     internal_only    : bool,
+ *     max_count        : int|null,
+ *     post_type        : string,
+ *     message_label    : string,
+ * } Arguments.
  */
 function _set_default_args( array $args ): array {
 	// phpcs:disable
-	$args['key']               = $args['key']               ?? '';
 	$args['do_allow_url_hash'] = $args['do_allow_url_hash'] ?? false;
 	$args['internal_only']     = $args['internal_only']     ?? false;
 	$args['max_count']         = $args['max_count']         ?? null;
@@ -94,110 +125,155 @@ function _set_default_args( array $args ): array {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Retrieves the link data.
  *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int|null             $post_id Post ID.
- * @return array<string, mixed>[]|null Media data.
+ * phpcs:ignore
+ * @param array{
+ *     key               : non-empty-string,
+ *     url_to?           : string,
+ *     do_allow_url_hash?: bool,
+ *     internal_only?    : bool,
+ *     max_count?        : int|null,
+ *     post_type?        : string|string[],
+ *     message_label?    : string,
+ * } $args An array of arguments.
+ * @param int    $post_id (Optional) Post ID.
+ * @return array{
+ *     url    : string,
+ *     title  : string,
+ *     post_id: int,
+ * }[] Media data.
  */
-function get_data( array $args, ?int $post_id = null ): ?array {
+function get_data( array $args, int $post_id = 0 ): array {
 	$args = _set_default_args( $args );
-	if ( null === $post_id ) {
+	if ( ! $post_id ) {
 		$post_id = get_the_ID();
 		if ( ! $post_id ) {
-			return null;
+			return array();
 		}
 	}
-	$sub_keys = array( 'url', 'title', 'post_id' );
-	$its      = \wpinc\get_multiple_post_meta( $post_id, $args['key'], $sub_keys );
+	$sks = array( 'url', 'title', 'post_id' );
+	$rs  = \wpinc\get_multiple_post_meta( $post_id, $args['key'], $sks );
+	$its = array();
 
-	foreach ( $its as &$it ) {
-		if ( ! is_numeric( $it['post_id'] ) ) {
-			continue;
-		}
-		$url = get_permalink( (int) $it['post_id'] );
-		if ( $url ) {
-			if ( $args['do_allow_url_hash'] ) {
-				$frag = wp_parse_url( $it['url'], PHP_URL_FRAGMENT );
-				if ( ! empty( $frag ) ) {
-					$url .= '#' . $frag;
+	foreach ( $rs as $r ) {
+		$it = array(
+			// phpcs:disable
+			'url'     => is_string( $r['url'] )      ? $r['url']           : '',
+			'title'   => is_string( $r['title'] )    ? $r['title']         : '',
+			'post_id' => is_numeric( $r['post_id'] ) ? (int) $r['post_id'] : 0,
+			// phpcs:enable
+		);
+		if ( $it['post_id'] ) {
+			$url = get_permalink( $it['post_id'] );
+			if ( $url ) {
+				if ( $args['do_allow_url_hash'] ) {
+					$frag = wp_parse_url( $it['url'], PHP_URL_FRAGMENT );
+					if ( ! empty( $frag ) ) {
+						$url .= '#' . $frag;
+					}
 				}
-			}
-			if ( $it['url'] !== $url ) {
 				$it['url'] = $url;
 			}
 		}
-		$it += array(
-			'url'     => '',
-			'title'   => '',
-			'post_id' => 0,
-		);
-
-		$it['post_id'] = (int) $it['post_id'];
+		$its[] = $it;
 	}
 	return $its;
 }
 
-/**
+/** phpcs:ignore
  * Retrieves the posts of the links.
  *
- * @param array<string, mixed> $args             Array of arguments.
- * @param int|null             $post_id          Post ID.
- * @param bool                 $skip_except_post (Optional) Whether to skip links except posts. Default true.
+ * phpcs:ignore
+ * @param array{
+ *     key               : non-empty-string,
+ *     url_to?           : string,
+ *     do_allow_url_hash?: bool,
+ *     internal_only?    : bool,
+ *     max_count?        : int|null,
+ *     post_type?        : string|string[],
+ *     message_label?    : string,
+ * } $args An array of arguments.
+ * @param int    $post_id          (Optional) Post ID.
+ * @param bool   $skip_except_post (Optional) Whether to skip links except posts. Default true.
  * @return array<\WP_Post|null> Posts.
  */
-function get_posts( array $args, ?int $post_id = null, bool $skip_except_post = true ): array {
+function get_posts( array $args, int $post_id = 0, bool $skip_except_post = true ): array {
 	$its = get_data( $args, $post_id );
 	$ps  = array();
-	if ( $its ) {
-		foreach ( $its as $it ) {
-			if ( ! is_numeric( $it['post_id'] ) ) {
-				continue;
-			}
-			$p = get_post( (int) $it['post_id'] );
-			if ( $skip_except_post && null === $p ) {
-				continue;
-			}
-			$ps[] = $p;
+
+	foreach ( $its as $it ) {
+		if ( ! $it['post_id'] ) {
+			continue;
 		}
+		/**
+		 * A post or null. This is determined by the second param 'OBJECT'.
+		 *
+		 * @var \WP_Post|null $p
+		 */
+		$p = get_post( $it['post_id'] );
+		if ( $skip_except_post && ! ( $p instanceof \WP_Post ) ) {
+			continue;
+		}
+		$ps[] = $p;
 	}
 	return $ps;
 }
 
-/**
+/** phpcs:ignore
  * Stores the link data.
  *
  * @access private
- *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int                  $post_id Post ID.
+ * phpcs:ignore
+ * @param array{
+ *     key              : non-empty-string,
+ *     url_to?          : string,
+ *     do_allow_url_hash: bool,
+ *     internal_only    : bool,
+ *     max_count        : int|null,
+ *     post_type        : string,
+ *     message_label    : string,
+ * } $args An array of arguments.
+ * @param int    $post_id Post ID.
  */
 function _save_data( array $args, int $post_id ): void {
-	$sub_keys = array( 'url', 'title', 'post_id', 'delete' );
+	$sks = array( 'url', 'title', 'post_id', 'delete' );
+	$rs  = \wpinc\get_multiple_post_meta_from_env( $args['key'], $sks );
+	$its = array();
 
-	$its = \wpinc\get_multiple_post_meta_from_env( $args['key'], $sub_keys );
-	$its = array_filter(
-		$its,
-		function ( $it ) {
-			return ! $it['delete'] && ! empty( $it['url'] );
+	foreach ( $rs as $r ) {
+		if ( $r['delete'] || empty( $r['url'] ) ) {
+			continue;
 		}
-	);
-	$its = array_values( $its );
+		$it = array(
+			// phpcs:disable
+			'url'     => is_string( $r['url'] )      ? $r['url']           : '',
+			'title'   => is_string( $r['title'] )    ? $r['title']         : '',
+			'post_id' => is_numeric( $r['post_id'] ) ? (int) $r['post_id'] : 0,
+			// phpcs:enable
+		);
+		$its[] = $it;
+	}
 
 	foreach ( $its as &$it ) {
 		_ensure_post_id( $it, $args['internal_only'], $args['do_allow_url_hash'] );
 	}
-	$sub_keys = array( 'url', 'title', 'post_id' );
-	\wpinc\set_multiple_post_meta( $post_id, $args['key'], $its, $sub_keys );
+	$sks = array( 'url', 'title', 'post_id' );
+	\wpinc\set_multiple_post_meta( $post_id, $args['key'], $its, $sks );
 }
 
-/**
+/** phpcs:ignore
  * Ensures post IDs of internal links.
  *
- * @param array<string, mixed> $it                A link data.
- * @param bool                 $internal_only     Whether to limit links to internal pages.
- * @param bool                 $do_allow_url_hash Whether to allow URLs with a hash.
+ * phpcs:ignore
+ * @param array{
+ *     url    : string,
+ *     title  : string,
+ *     post_id: int,
+ * } &$it A link data.
+ * @param bool   $internal_only     Whether to limit links to internal pages.
+ * @param bool   $do_allow_url_hash Whether to allow URLs with a hash.
  */
 function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_hash ): void {
 	$pid = url_to_postid( $it['url'] );
@@ -212,11 +288,11 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 
 	if ( $it['post_id'] ) {
 		if ( $pid ) {
-			if ( $pid !== (int) $it['post_id'] ) {
+			if ( $pid !== $it['post_id'] ) {
 				$it['post_id'] = $pid;
 			}
 		} else {
-			$url = get_permalink( (int) $it['post_id'] );
+			$url = get_permalink( $it['post_id'] );
 			if ( $url ) {
 				$it['url'] = $url . $hash;
 			} elseif ( $internal_only ) {
@@ -227,7 +303,7 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 				}
 			}
 		}
-	} else {
+	} else {  // phpcs:ignore
 		if ( $pid ) {
 			$it['post_id'] = $pid;
 		} elseif ( $internal_only ) {
@@ -247,7 +323,12 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
  * @return \WP_Post|null WP_Post on success, or null on failure.
  */
 function _get_page_by_title( string $page_title ) {
-	$ps = get_posts(
+	/**
+	 * Posts. This is determined by $args['fields'] being ''.
+	 *
+	 * @var \WP_Post[] $ps
+	 */
+	$ps = \get_posts(
 		array(
 			'post_type'              => 'page',
 			'title'                  => $page_title,
@@ -269,10 +350,19 @@ function _get_page_by_title( string $page_title ) {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Adds the meta box to template admin screen.
  *
- * @param array<string, mixed>          $args     Array of arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key               : non-empty-string,
+ *     url_to?           : string,
+ *     do_allow_url_hash?: bool,
+ *     internal_only?    : bool,
+ *     max_count?        : int|null,
+ *     post_type?        : string|string[],
+ *     message_label?    : string,
+ * } $args An array of arguments.
  * @param string                        $title    Title of the meta box.
  * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
  * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
@@ -292,20 +382,30 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 	);
 }
 
-/**
+/** phpcs:ignore
  * Stores the data of the meta box on template admin screen.
  *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int                  $post_id Post ID.
+ * phpcs:ignore
+ * @param array{
+ *     key               : non-empty-string,
+ *     url_to?           : string,
+ *     do_allow_url_hash?: bool,
+ *     internal_only?    : bool,
+ *     max_count?        : int|null,
+ *     post_type?        : string|string[],
+ *     message_label?    : string,
+ * } $args An array of arguments.
+ * @param int    $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
 	$key  = $args['key'];
 
-	if ( ! isset( $_POST[ "{$key}_nonce" ] ) ) {
+	$nonce = $_POST[ "{$key}_nonce" ] ?? null;  // phpcs:ignore
+	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $_POST[ "{$key}_nonce" ] ), $key ) ) {
+	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
 	_save_data( $args, $post_id );
@@ -315,20 +415,28 @@ function save_meta_box( array $args, int $post_id ): void {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Callback function for 'add_meta_box'.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @param \WP_Post             $post Current post.
+ * phpcs:ignore
+ * @param array{
+ *     key              : non-empty-string,
+ *     url_to?          : string,
+ *     do_allow_url_hash: bool,
+ *     internal_only    : bool,
+ *     max_count        : int|null,
+ *     post_type        : string,
+ *     message_label    : string,
+ * } $args An array of arguments.
+ * @param \WP_Post $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
 
 	$its = get_data( $args, $post->ID );
-	if ( $its && $args['max_count'] ) {
+	if ( ! empty( $its ) && $args['max_count'] ) {
 		$its = array_slice( $its, 0, min( $args['max_count'], count( $its ) ) );
 	}
 	$script = sprintf(
@@ -343,11 +451,9 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	<div class="wpinc-dia-link-picker" id="<?php echo esc_attr( $key ); ?>">
 		<div class="table">
 	<?php
-	_output_item_row( $args, array(), 'item-template' );
-	if ( $its ) {
-		foreach ( $its as $it ) {
-			_output_item_row( $args, $it, 'item' );
-		}
+	_output_item_row( $args, null, 'item-template' );
+	foreach ( $its as $it ) {
+		_output_item_row( $args, $it, 'item' );
 	}
 	?>
 			<div class="add-row">
@@ -360,20 +466,36 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	<?php
 }
 
-/**
+/** phpcs:ignore
  * Displays an item row.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @param array<string, mixed> $it   An item.
- * @param string               $cls  CSS class.
+ * phpcs:ignore
+ * @param array{
+ *     key              : non-empty-string,
+ *     url_to?          : string,
+ *     do_allow_url_hash: bool,
+ *     internal_only    : bool,
+ *     max_count        : int|null,
+ *     post_type        : string,
+ *     message_label    : string,
+ * } $args An array of arguments.
+ * phpcs:ignore
+ * @param array{
+ *     url    : string,
+ *     title  : string,
+ *     post_id: int,
+ * }|null $it An item.
+ * @param string $cls CSS class.
  */
-function _output_item_row( array $args, array $it, string $cls ): void {
-	$url     = $it['url'] ?? '';
-	$title   = $it['title'] ?? '';
-	$post_id = $it['post_id'] ?? '';
-
+function _output_item_row( array $args, ?array $it, string $cls ): void {
+	if ( ! $it ) {
+		$it = array(
+			'url'     => '',
+			'title'   => '',
+			'post_id' => 0,
+		);
+	}
 	$ro = ( $args['internal_only'] && ! $args['do_allow_url_hash'] ) ? ' readonly' : '';
 	?>
 	<div class="<?php echo esc_attr( $cls ); ?>">
@@ -387,17 +509,17 @@ function _output_item_row( array $args, array $it, string $cls ): void {
 		<div class="item-cont">
 			<div>
 				<span><?php echo esc_html_x( 'Title', 'link picker', 'wpinc_dia' ); ?>:</span>
-				<input type="text" data-key="title" value="<?php echo esc_attr( $title ); ?>">
+				<input type="text" data-key="title" value="<?php echo esc_attr( $it['title'] ); ?>">
 			</div>
 			<div>
 				<span><button type="button" class="opener">URL:</button></span>
 				<span>
-					<input type="text" data-key="url" value="<?php echo esc_attr( $url ); ?>"<?php echo esc_attr( $ro ); ?>>
+					<input type="text" data-key="url" value="<?php echo esc_attr( $it['url'] ); ?>"<?php echo esc_attr( $ro ); ?>>
 					<button type="button" class="button select"><?php echo esc_html_x( 'Select', 'link picker', 'wpinc_dia' ); ?></button>
 				</span>
 			</div>
 		</div>
-		<input type="hidden" data-key="post_id" value="<?php echo esc_attr( $post_id ); ?>">
+		<input type="hidden" data-key="post_id" value="<?php echo esc_attr( (string) $it['post_id'] ); ?>">
 	</div>
 	<?php
 }

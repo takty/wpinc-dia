@@ -4,15 +4,25 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-06
+ * @version 2023-11-05
  */
+
+declare(strict_types=1);
 
 namespace wpinc\dia\post_thumbnail;
 
-/**
+require_once __DIR__ . '/assets/asset-url.php';
+
+/** phpcs:ignore
  * Initializes post thumbnail picker.
  *
- * @param array<string, mixed> $args {
+ * phpcs:ignore
+ * @param array{
+ *     url_to?: string,
+ *     key?   : string,
+ * } $args (Optional) An array of arguments.
+ *
+ * $args {
  *     (Optional) An array of arguments.
  *
  *     @type string 'url_to' URL to this script.
@@ -44,16 +54,21 @@ function _register_script( string $url_to ): void {
 	}
 }
 
-/**
+/** phpcs:ignore
  * Assign default arguments.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @return array<string, mixed> Arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key    : non-empty-string,
+ *     url_to?: string,
+ * } $args An array of arguments.
+ * @return array{
+ *     key    : non-empty-string,
+ *     url_to?: string,
+ * } Arguments.
  */
 function _set_default_args( array $args ): array {
-	$args['key'] = $args['key'] ?? '';
 	return $args;
 }
 
@@ -61,11 +76,15 @@ function _set_default_args( array $args ): array {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Retrieves post thumbnail data.
  *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int|null             $post_id Post ID.
+ * phpcs:ignore
+ * @param array{
+ *     key    : non-empty-string,
+ *     url_to?: string,
+ * } $args An array of arguments.
+ * @param int|null $post_id Post ID.
  * @return int|null Media ID.
  */
 function get_data( array $args, ?int $post_id = null ): ?int {
@@ -76,17 +95,21 @@ function get_data( array $args, ?int $post_id = null ): ?int {
 			return null;
 		}
 	}
-	return (int) get_post_meta( $post_id, $args['key'], true );
+	$val = get_post_meta( $post_id, $args['key'], true );
+	return is_numeric( $val ) ? (int) $val : null;
 }
 
-/**
+/** phpcs:ignore
  * Stores the data of post thumbnail.
  *
  * @access private
- *
- * @param array<string, mixed> $args     Array of arguments.
- * @param int                  $post_id  Post ID.
- * @param int                  $media_id Media ID.
+ * phpcs:ignore
+ * @param array{
+ *     key    : non-empty-string,
+ *     url_to?: string,
+ * } $args An array of arguments.
+ * @param int    $post_id  Post ID.
+ * @param int    $media_id Media ID.
  */
 function _save_data( array $args, int $post_id, int $media_id ): void {
 	if ( $media_id ) {
@@ -100,10 +123,14 @@ function _save_data( array $args, int $post_id, int $media_id ): void {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Adds the meta box to template admin screen.
  *
- * @param array<string, mixed>          $args     Array of arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key    : non-empty-string,
+ *     url_to?: string,
+ * } $args An array of arguments.
  * @param string                        $title    Title of the meta box.
  * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
  * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
@@ -123,21 +150,31 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 	);
 }
 
-/**
+/** phpcs:ignore
  * Stores the data of the meta box on template admin screen.
  *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int                  $post_id Post ID.
+ * phpcs:ignore
+ * @param array{
+ *     key    : non-empty-string,
+ *     url_to?: string,
+ * } $args An array of arguments.
+ * @param int    $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
-	if ( ! isset( $_POST[ "{$args['key']}_nonce" ] ) ) {
+	$key  = $args['key'];
+
+	$nonce = $_POST[ "{$key}_nonce" ] ?? null;  // phpcs:ignore
+	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $_POST[ "{$args['key']}_nonce" ] ), $args['key'] ) ) {
+	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
-	$media_id = (int) sanitize_text_field( wp_unslash( $_POST[ $args['key'] ] ?? '' ) );
+	$media_id_r = $_POST[ $key ] ?? null;  // phpcs:ignore
+	$media_id_r = is_string( $media_id_r ) ? $media_id_r : '';
+
+	$media_id = (int) sanitize_text_field( wp_unslash( $media_id_r ) );
 	_save_data( $args, $post_id, $media_id );
 }
 
@@ -145,18 +182,22 @@ function save_meta_box( array $args, int $post_id ): void {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Callback function for 'add_meta_box'.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @param \WP_Post             $post Current post.
+ * phpcs:ignore
+ * @param array{
+ *     key    : non-empty-string,
+ *     url_to?: string,
+ * } $args An array of arguments.
+ * @param \WP_Post $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	wp_nonce_field( $args['key'], "{$args['key']}_nonce" );
 	$it  = (int) get_data( $args, $post->ID );
 	$key = $args['key'];
+	$src = '';
 
 	if ( $it ) {
 		$tmp = wp_get_attachment_image_src( $it, 'medium' );

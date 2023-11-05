@@ -4,29 +4,39 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-01
+ * @version 2023-11-05
  */
+
+declare(strict_types=1);
 
 namespace wpinc\dia\duration_picker;
 
 require_once __DIR__ . '/assets/asset-url.php';
 
-/**
+/** phpcs:ignore
  * Initializes duration picker.
+ * phpcs:ignore
+ * @param array{
+ *     key         : non-empty-string,
+ *     url_to?     : string,
+ *     do_autofill?: bool,
+ *     label_from? : string,
+ *     label_to?   : string,
+ *     locale?     : string,
+ * } $args An array of arguments.
  *
- * @param array<string, mixed> $args {
- *     (Optional) An array of arguments.
- *
- *     @type string 'url_to'      URL to this script.
+ * $args {
+ *     An array of arguments.
  *
  *     @type string 'key'         Meta key.
+ *     @type string 'url_to'      URL to this script.
+ *     @type bool   'do_autofill' Whether to do autofill.
  *     @type string 'label_from'  Label for duration 'from'.
  *     @type string 'label_to'    Label for duration 'to'.
- *     @type bool   'do_autofill' Whether to do autofill.
  *     @type string 'locale'      Locale.
  * }
  */
-function initialize( array $args = array() ): void {
+function initialize( array $args ): void {
 	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\get_file_uri( __DIR__ ) );
 	_register_script( $url_to );
 }
@@ -52,17 +62,30 @@ function _register_script( string $url_to ): void {
 	}
 }
 
-/**
+/** phpcs:ignore
  * Assign default arguments.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @return array<string, mixed> Arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key         : non-empty-string,
+ *     url_to?     : string,
+ *     do_autofill?: bool,
+ *     label_from? : string,
+ *     label_to?   : string,
+ *     locale?     : string,
+ * } $args An array of arguments.
+ * @return array{
+ *     key        : non-empty-string,
+ *     url_to?    : string,
+ *     do_autofill: bool,
+ *     label_from : string,
+ *     label_to   : string,
+ *     locale     : string,
+ * } Arguments.
  */
 function _set_default_args( array $args ): array {
 	// phpcs:disable
-	$args['key']         = $args['key']         ?? '';
 	$args['do_autofill'] = $args['do_autofill'] ?? false;
 	$args['label_from']  = $args['label_from']  ?? 'From';
 	$args['label_to']    = $args['label_to']    ?? 'To';
@@ -75,12 +98,20 @@ function _set_default_args( array $args ): array {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Retrieves duration data.
  *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int|null             $post_id Post ID.
- * @return array<string, string>|null Duration data.
+ * phpcs:ignore
+ * @param array{
+ *     key         : non-empty-string,
+ *     url_to?     : string,
+ *     do_autofill?: bool,
+ *     label_from? : string,
+ *     label_to?   : string,
+ *     locale?     : string,
+ * } $args An array of arguments.
+ * @param int|null $post_id Post ID.
+ * @return array{ from: string|null, to: string|null }|null Duration data.
  */
 function get_data( array $args, ?int $post_id = null ): ?array {
 	$args = _set_default_args( $args );
@@ -90,21 +121,30 @@ function get_data( array $args, ?int $post_id = null ): ?array {
 			return null;
 		}
 	}
+	$from = get_post_meta( $post_id, "{$args['key']}_from", true );
+	$to   = get_post_meta( $post_id, "{$args['key']}_to", true );
 	return array(
-		'from' => get_post_meta( $post_id, "{$args['key']}_from", true ),
-		'to'   => get_post_meta( $post_id, "{$args['key']}_to", true ),
+		'from' => is_string( $from ) ? $from : null,
+		'to'   => is_string( $to ) ? $to : null,
 	);
 }
 
-/**
+/** phpcs:ignore
  * Stores the data of duration.
  *
  * @access private
- *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int                  $post_id Post ID.
- * @param string               $from    Date 'from'.
- * @param string               $to      Date 'to'.
+ * phpcs:ignore
+ * @param array{
+ *     key        : non-empty-string,
+ *     url_to?    : string,
+ *     do_autofill: bool,
+ *     label_from : string,
+ *     label_to   : string,
+ *     locale     : string,
+ * } $args An array of arguments.
+ * @param int    $post_id Post ID.
+ * @param string $from    Date 'from'.
+ * @param string $to      Date 'to'.
  */
 function _save_data( array $args, int $post_id, string $from, string $to ): void {
 	if ( $from && $to ) {
@@ -137,10 +177,18 @@ function _save_data( array $args, int $post_id, string $from, string $to ): void
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Adds the meta box to template admin screen.
  *
- * @param array<string, mixed>          $args     Array of arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key         : non-empty-string,
+ *     url_to?     : string,
+ *     do_autofill?: bool,
+ *     label_from? : string,
+ *     label_to?   : string,
+ *     locale?     : string,
+ * } $args An array of arguments.
  * @param string                        $title    Title of the meta box.
  * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
  * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
@@ -160,22 +208,38 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 	);
 }
 
-/**
+/** phpcs:ignore
  * Stores the data of the meta box on template admin screen.
  *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int                  $post_id Post ID.
+ * phpcs:ignore
+ * @param array{
+ *     key         : non-empty-string,
+ *     url_to?     : string,
+ *     do_autofill?: bool,
+ *     label_from? : string,
+ *     label_to?   : string,
+ *     locale?     : string,
+ * } $args An array of arguments.
+ * @param int    $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
-	if ( ! isset( $_POST[ "{$args['key']}_nonce" ] ) ) {
+	$key  = $args['key'];
+
+	$nonce = $_POST[ "{$key}_nonce" ] ?? null;  // phpcs:ignore
+	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $_POST[ "{$args['key']}_nonce" ] ), $args['key'] ) ) {
+	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
-	$from = sanitize_text_field( wp_unslash( $_POST[ "{$args['key']}_from" ] ?? '' ) );
-	$to   = sanitize_text_field( wp_unslash( $_POST[ "{$args['key']}_to" ] ?? '' ) );
+	$from_r = $_POST[ "{$key}_from" ] ?? null;  // phpcs:ignore
+	$from_r = is_string( $from_r ) ? $from_r : '';
+	$to_r   = $_POST[ "{$key}_to" ] ?? null;  // phpcs:ignore
+	$to_r   = is_string( $to_r ) ? $to_r : '';
+
+	$from = sanitize_text_field( wp_unslash( $from_r ) );
+	$to   = sanitize_text_field( wp_unslash( $to_r ) );
 	_save_data( $args, $post_id, $from, $to );
 }
 
@@ -183,13 +247,20 @@ function save_meta_box( array $args, int $post_id ): void {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Callback function for 'add_meta_box'.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @param \WP_Post             $post Current post.
+ * phpcs:ignore
+ * @param array{
+ *     key        : non-empty-string,
+ *     url_to?    : string,
+ *     do_autofill: bool,
+ *     label_from : string,
+ *     label_to   : string,
+ *     locale     : string,
+ * } $args An array of arguments.
+ * @param \WP_Post $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	wp_nonce_field( $args['key'], "{$args['key']}_nonce" );

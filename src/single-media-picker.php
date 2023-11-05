@@ -4,25 +4,33 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-09-01
+ * @version 2023-11-05
  */
+
+declare(strict_types=1);
 
 namespace wpinc\dia\single_media_picker;
 
 require_once __DIR__ . '/assets/asset-url.php';
 
-/**
+/** phpcs:ignore
  * Initializes single media picker.
+ * phpcs:ignore
+ * @param array{
+ *     key            : non-empty-string,
+ *     url_to?        : string,
+ *     title_editable?: bool,
+ * } $args An array of arguments.
  *
- * @param array<string, mixed> $args {
+ * $args {
  *     (Optional) An array of arguments.
  *
- *     @type string 'url_to'         URL to this script.
  *     @type string 'key'            Meta key.
+ *     @type string 'url_to'         URL to this script.
  *     @type bool   'title_editable' Whether the title is editable.
  * }
  */
-function initialize( array $args = array() ): void {
+function initialize( array $args ): void {
 	$url_to = untrailingslashit( $args['url_to'] ?? \wpinc\get_file_uri( __DIR__ ) );
 	_register_script( $url_to );
 }
@@ -47,17 +55,20 @@ function _register_script( string $url_to ): void {
 	}
 }
 
-/**
+/** phpcs:ignore
  * Assign default arguments.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @return array<string, mixed> Arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key            : non-empty-string,
+ *     url_to?        : string,
+ *     title_editable?: bool,
+ * } $args An array of arguments.
+ * @return array{ key: non-empty-string, url_to?: string, title_editable: bool } Arguments.
  */
 function _set_default_args( array $args ): array {
 	// phpcs:disable
-	$args['key']            = $args['key']            ?? '';
 	$args['title_editable'] = $args['title_editable'] ?? true;
 	// phpcs:enable
 	return $args;
@@ -67,52 +78,85 @@ function _set_default_args( array $args ): array {
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Retrieves the media data.
- *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int|null             $post_id Post ID.
- * @return array<string, mixed>|null Media data.
+ * phpcs:ignore
+ * @param array{
+ *     key            : non-empty-string,
+ *     url_to?        : string,
+ *     title_editable?: bool,
+ * } $args An array of arguments.
+ * @param int    $post_id (Optional) Post ID.
+ * @return array{
+ *     url     : string,
+ *     title   : string,
+ *     filename: string,
+ *     media_id: int,
+ * }|null Media data.
  */
-function get_data( array $args, ?int $post_id = null ): ?array {
+function get_data( array $args, int $post_id = 0 ): ?array {
 	$args = _set_default_args( $args );
-	if ( null === $post_id ) {
+	if ( ! $post_id ) {
 		$post_id = get_the_ID();
 		if ( ! $post_id ) {
 			return null;
 		}
 	}
 	$json = get_post_meta( $post_id, $args['key'], true );
-	$vals = json_decode( $json, true );
-	return $vals + array(
-		'url'      => '',
-		'title'    => '',
-		'filename' => '',
+	$r    = is_string( $json ) ? json_decode( $json, true ) : array();
+	if ( ! is_array( $r ) ) {
+		$r = array();
+	}
+	$it = array(
+		'url'      => (string) ( $r['url'] ?? '' ),
+		'title'    => (string) ( $r['title'] ?? '' ),
+		'filename' => (string) ( $r['filename'] ?? '' ),
+		'media_id' => is_numeric( $r['media_id'] ?? null ) ? (int) $r['media_id'] : 0,
 	);
+	return $it;
 }
 
-/**
+/** phpcs:ignore
  * Stores the media data.
  *
  * @access private
- *
- * @param array<string, mixed> $args     Array of arguments.
- * @param int                  $post_id  Post ID.
- * @param int                  $media_id Media ID.
- * @param string               $url      URL.
- * @param string               $title    Title.
- * @param string               $filename File name.
+ * phpcs:ignore
+ * @param array{
+ *     key           : non-empty-string,
+ *     url_to?       : string,
+ *     title_editable: bool,
+ * } $args An array of arguments.
+ * @param int    $post_id  Post ID.
  */
-function _save_data( array $args, int $post_id, int $media_id, string $url, string $title, string $filename ): void {
+function _save_data( array $args, int $post_id ): void {
+	$r = array();
+	if ( isset( $_POST[ $args['key'] ] ) && is_array( $_POST[ $args['key'] ] ) ) {  // phpcs:ignore
+		$r = wp_unslash( $_POST[ $args['key'] ] );  // phpcs:ignore
+	}
+	$media_id_r = $r['media_id'] ?? null;
+	$media_id_r = is_string( $media_id_r ) ? $media_id_r : '0';
+	$media_id_r = sanitize_text_field( $media_id_r );
+
+	$url      = sanitize_text_field( ( isset( $r['url'] ) && is_string( $r['url'] ) ) ? $r['url'] : '' );
+	$title    = sanitize_text_field( ( isset( $r['title'] ) && is_string( $r['title'] ) ) ? $r['title'] : '' );
+	$filename = sanitize_text_field( ( isset( $r['filename'] ) && is_string( $r['filename'] ) ) ? $r['filename'] : '' );
+	$media_id = is_numeric( $media_id_r ) ? (int) $media_id_r : 0;
+
 	if ( $media_id ) {
-		$vals = compact( 'media_id', 'url', 'title', 'filename' );
-		$vals = array_filter(
-			$vals,
+		$r = array(
+			'url'      => $url,
+			'title'    => $title,
+			'filename' => $filename,
+			'media_id' => $media_id,
+		);
+		$r = array_filter(
+			$r,
 			function ( $e ) {
 				return ! empty( $e );
 			}
 		);
-		$json = wp_json_encode( $vals, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+
+		$json = wp_json_encode( $r, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 		if ( false !== $json ) {
 			update_post_meta( $post_id, $args['key'], addslashes( $json ) );  // Because the meta value is passed through the stripslashes() function upon being stored.
 		}
@@ -125,12 +169,17 @@ function _save_data( array $args, int $post_id, int $media_id, string $url, stri
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Adds the meta box to template admin screen.
  *
- * @param array<string, mixed>          $args     Array of arguments.
+ * phpcs:ignore
+ * @param array{
+ *     key            : non-empty-string,
+ *     url_to?        : string,
+ *     title_editable?: bool,
+ * } $args An array of arguments.
  * @param string                        $title    Title of the meta box.
- * @param ?string                       $screen   (Optional) The screen or screens on which to show the box.
+ * @param string|null                   $screen   (Optional) The screen or screens on which to show the box.
  * @param 'advanced'|'normal'|'side'    $context  (Optional) The context within the screen where the box should display.
  * @param 'core'|'default'|'high'|'low' $priority (Optional) The priority within the context where the box should show.
  */
@@ -148,42 +197,47 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 	);
 }
 
-/**
+/** phpcs:ignore
  * Stores the data of the meta box on template admin screen.
  *
- * @param array<string, mixed> $args    Array of arguments.
- * @param int                  $post_id Post ID.
+ * @psalm-suppress PossiblyInvalidArrayOffset
+ * phpcs:ignore
+ * @param array{
+ *     key            : non-empty-string,
+ *     url_to?        : string,
+ *     title_editable?: bool,
+ * } $args An array of arguments.
+ * @param int    $post_id Post ID.
  */
 function save_meta_box( array $args, int $post_id ): void {
 	$args = _set_default_args( $args );
 	$key  = $args['key'];
 
-	if ( ! isset( $_POST[ "{$key}_nonce" ] ) ) {
+	$nonce = $_POST[ "{$key}_nonce" ] ?? null;  // phpcs:ignore
+	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $_POST[ "{$key}_nonce" ] ), $key ) ) {
+	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
-	$vals     = wp_unslash( $_POST[ $key ] );  // phpcs:ignore
-	$media_id = (int) sanitize_text_field( $vals['media_id'] ?? '0' );
-	$url      = sanitize_text_field( $vals['url'] ?? '' );
-	$title    = sanitize_text_field( $vals['title'] ?? '' );
-	$filename = sanitize_text_field( $vals['filename'] ?? '' );
-
-	_save_data( $args, $post_id, $media_id, $url, $title, $filename );
+	_save_data( $args, $post_id );
 }
 
 
 // -----------------------------------------------------------------------------
 
 
-/**
+/** phpcs:ignore
  * Callback function for 'add_meta_box'.
  *
  * @access private
- *
- * @param array<string, mixed> $args Array of arguments.
- * @param \WP_Post             $post Current post.
+ * phpcs:ignore
+ * @param array{
+ *     key           : non-empty-string,
+ *     url_to?       : string,
+ *     title_editable: bool,
+ * } $args An array of arguments.
+ * @param \WP_Post $post Current post.
  */
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
@@ -191,10 +245,10 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 
 	$it = get_data( $args, $post->ID );
 
-	$media_id = $it ? $it['media_id'] : 0;
 	$url      = $it ? $it['url'] : '';
 	$title    = $it ? $it['title'] : '';
 	$filename = $it ? $it['filename'] : '';
+	$media_id = $it ? $it['media_id'] : 0;
 
 	$ro = $args['title_editable'] ? '' : ' readonly';
 
@@ -221,7 +275,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 					</span>
 				</div>
 			</div>
-			<input type="hidden" name=<?php echo esc_attr( "{$key}[media_id]" ); ?> value="<?php echo esc_attr( $media_id ); ?>">
+			<input type="hidden" name=<?php echo esc_attr( "{$key}[media_id]" ); ?> value="<?php echo esc_attr( (string) $media_id ); ?>">
 			<input type="hidden" name=<?php echo esc_attr( "{$key}[url]" ); ?> value="<?php echo esc_attr( $url ); ?>">
 			<input type="hidden" name=<?php echo esc_attr( "{$key}[filename]" ); ?> value="<?php echo esc_attr( $filename ); ?>">
 		</div>
