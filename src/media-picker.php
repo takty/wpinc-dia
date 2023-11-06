@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-11-05
+ * @version 2023-11-06
  */
 
 declare(strict_types=1);
@@ -235,13 +235,12 @@ function save_meta_box( array $args, int $post_id ): void {
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
-	_output_html( $args, $post->ID );
+	output_html( $args, $post->ID );
 }
 
 /** phpcs:ignore
  * Displays the inside of the metabox.
  *
- * @access private
  * phpcs:ignore
  * @param array{
  *     key           : non-empty-string,
@@ -250,7 +249,7 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
  * } $args An array of arguments.
  * @param int    $post_id Post ID.
  */
-function _output_html( array $args, int $post_id ): void {
+function output_html( array $args, int $post_id ): void {
 	$key = $args['key'];
 	$its = get_data( $args, $post_id );
 
