@@ -84,12 +84,12 @@ function _set_default_args( array $args ): array {
  *     key    : non-empty-string,
  *     url_to?: string,
  * } $args An array of arguments.
- * @param int|null $post_id Post ID.
+ * @param int    $post_id Post ID.
  * @return int|null Media ID.
  */
-function get_data( array $args, ?int $post_id = null ): ?int {
+function get_data( array $args, int $post_id = 0 ): ?int {
 	$args = _set_default_args( $args );
-	if ( null === $post_id ) {
+	if ( ! $post_id ) {
 		$post_id = get_the_ID();
 		if ( ! $post_id ) {
 			return null;

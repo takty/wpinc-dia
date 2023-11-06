@@ -110,12 +110,12 @@ function _set_default_args( array $args ): array {
  *     label_to?   : string,
  *     locale?     : string,
  * } $args An array of arguments.
- * @param int|null $post_id Post ID.
+ * @param int    $post_id (Optional) Post ID.
  * @return array{ from: string|null, to: string|null }|null Duration data.
  */
-function get_data( array $args, ?int $post_id = null ): ?array {
+function get_data( array $args, int $post_id = 0 ): ?array {
 	$args = _set_default_args( $args );
-	if ( null === $post_id ) {
+	if ( ! $post_id ) {
 		$post_id = get_the_ID();
 		if ( ! $post_id ) {
 			return null;
