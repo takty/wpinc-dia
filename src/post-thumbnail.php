@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-11-05
+ * @version 2024-03-12
  */
 
 declare(strict_types=1);
@@ -91,7 +91,7 @@ function get_data( array $args, int $post_id = 0 ): ?int {
 	$args = _set_default_args( $args );
 	if ( ! $post_id ) {
 		$post_id = get_the_ID();
-		if ( ! $post_id ) {
+		if ( ! is_int( $post_id ) ) {
 			return null;
 		}
 	}
@@ -168,7 +168,7 @@ function save_meta_box( array $args, int $post_id ): void {
 	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
+	if ( false === wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
 	$media_id_r = $_POST[ $key ] ?? null;  // phpcs:ignore

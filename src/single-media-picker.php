@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-11-05
+ * @version 2024-03-13
  */
 
 declare(strict_types=1);
@@ -98,7 +98,7 @@ function get_data( array $args, int $post_id = 0 ): ?array {
 	$args = _set_default_args( $args );
 	if ( ! $post_id ) {
 		$post_id = get_the_ID();
-		if ( ! $post_id ) {
+		if ( ! is_int( $post_id ) ) {
 			return null;
 		}
 	}
@@ -152,12 +152,12 @@ function _save_data( array $args, int $post_id ): void {
 		$r = array_filter(
 			$r,
 			function ( $e ) {
-				return ! empty( $e );
+				return 0 !== $e && '' !== $e;
 			}
 		);
 
 		$json = wp_json_encode( $r, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
-		if ( false !== $json ) {
+		if ( is_string( $json ) ) {
 			update_post_meta( $post_id, $args['key'], addslashes( $json ) );  // Because the meta value is passed through the stripslashes() function upon being stored.
 		}
 	} else {
@@ -200,7 +200,6 @@ function add_meta_box( array $args, string $title, ?string $screen = null, strin
 /** phpcs:ignore
  * Stores the data of the meta box on template admin screen.
  *
- * @psalm-suppress PossiblyInvalidArrayOffset
  * phpcs:ignore
  * @param array{
  *     key            : non-empty-string,
@@ -217,7 +216,7 @@ function save_meta_box( array $args, int $post_id ): void {
 	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
+	if ( false === wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
 	_save_data( $args, $post_id );

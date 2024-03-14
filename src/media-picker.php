@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-11-06
+ * @version 2024-03-14
  */
 
 declare(strict_types=1);
@@ -101,7 +101,7 @@ function get_data( array $args, int $post_id = 0 ): array {
 	$args = _set_default_args( $args );
 	if ( ! $post_id ) {
 		$post_id = get_the_ID();
-		if ( ! $post_id ) {
+		if ( ! is_int( $post_id ) ) {
 			return array();
 		}
 	}
@@ -141,12 +141,15 @@ function _save_data( array $args, int $post_id ): void {
 	$its = array();
 
 	foreach ( $rs as $r ) {
-		if ( $r['delete'] || empty( $r['url'] ) ) {
+		if (
+			$r['delete']
+			|| ! is_string( $r['url'] ) || '' === $r['url']  // Check for non-empty-string.
+		) {
 			continue;
 		}
 		$it = array(
 			// phpcs:disable
-			'url'      => is_string( $r['url'] )       ? $r['url']            : '',
+			'url'      => $r['url'],
 			'title'    => is_string( $r['title'] )     ? $r['title']          : '',
 			'filename' => is_string( $r['filename'] )  ? $r['filename']       : '',
 			'media_id' => is_numeric( $r['media_id'] ) ? (int) $r['media_id'] : 0,
@@ -210,7 +213,7 @@ function save_meta_box( array $args, int $post_id ): void {
 	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
+	if ( false === wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
 	_save_data( $args, $post_id );

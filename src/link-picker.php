@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-11-05
+ * @version 2024-03-14
  */
 
 declare(strict_types=1);
@@ -149,7 +149,7 @@ function get_data( array $args, int $post_id = 0 ): array {
 	$args = _set_default_args( $args );
 	if ( ! $post_id ) {
 		$post_id = get_the_ID();
-		if ( ! $post_id ) {
+		if ( ! is_int( $post_id ) ) {
 			return array();
 		}
 	}
@@ -167,10 +167,10 @@ function get_data( array $args, int $post_id = 0 ): array {
 		);
 		if ( $it['post_id'] ) {
 			$url = get_permalink( $it['post_id'] );
-			if ( $url ) {
+			if ( is_string( $url ) ) {
 				if ( $args['do_allow_url_hash'] ) {
 					$frag = wp_parse_url( $it['url'], PHP_URL_FRAGMENT );
-					if ( ! empty( $frag ) ) {
+					if ( is_string( $frag ) && '' !== $frag ) {  // Check for non-empty-string.
 						$url .= '#' . $frag;
 					}
 				}
@@ -243,12 +243,15 @@ function _save_data( array $args, int $post_id ): void {
 	$its = array();
 
 	foreach ( $rs as $r ) {
-		if ( $r['delete'] || empty( $r['url'] ) ) {
+		if (
+			$r['delete']
+			|| ! is_string( $r['url'] ) || '' === $r['url']  // Check for non-empty-string.
+		) {
 			continue;
 		}
 		$it = array(
 			// phpcs:disable
-			'url'     => is_string( $r['url'] )      ? $r['url']           : '',
+			'url'     => $r['url'],
 			'title'   => is_string( $r['title'] )    ? $r['title']         : '',
 			'post_id' => is_numeric( $r['post_id'] ) ? (int) $r['post_id'] : 0,
 			// phpcs:enable
@@ -281,7 +284,7 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 	$hash = '';
 	if ( $do_allow_url_hash ) {
 		$frag = wp_parse_url( $it['url'], PHP_URL_FRAGMENT );
-		if ( ! empty( $frag ) ) {
+		if ( is_string( $frag ) && '' !== $frag ) {  // Check for non-empty-string.
 			$hash = '#' . $frag;
 		}
 	}
@@ -293,11 +296,11 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 			}
 		} else {
 			$url = get_permalink( $it['post_id'] );
-			if ( $url ) {
+			if ( is_string( $url ) ) {
 				$it['url'] = $url . $hash;
 			} elseif ( $internal_only ) {
 				$p = _get_page_by_title( $it['title'] );
-				if ( null !== $p ) {
+				if ( $p instanceof \WP_Post ) {
 					$it['url']     = get_permalink( $p ) . $hash;
 					$it['post_id'] = $p->ID;
 				}
@@ -308,7 +311,7 @@ function _ensure_post_id( array &$it, bool $internal_only, bool $do_allow_url_ha
 			$it['post_id'] = $pid;
 		} elseif ( $internal_only ) {
 			$p = _get_page_by_title( $it['title'] );
-			if ( null !== $p ) {
+			if ( $p instanceof \WP_Post ) {
 				$it['url']     = get_permalink( $p ) . $hash;
 				$it['post_id'] = $p->ID;
 			}
@@ -405,7 +408,7 @@ function save_meta_box( array $args, int $post_id ): void {
 	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
+	if ( false === wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
 	_save_data( $args, $post_id );
@@ -435,15 +438,17 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
 
+	$max_count = is_int( $args['max_count'] ) ? $args['max_count'] : 0;
+
 	$its = get_data( $args, $post->ID );
-	if ( ! empty( $its ) && $args['max_count'] ) {
+	if ( ! empty( $its ) && 0 < $max_count ) {
 		$its = array_slice( $its, 0, min( $args['max_count'], count( $its ) ) );
 	}
 	$script = sprintf(
 		'window.addEventListener("load", () => { wpinc_link_picker_init("%s", %s, %s, %s, %s); });',
 		$key,
 		$args['internal_only'] ? 'true' : 'false',
-		$args['max_count'] ? (string) $args['max_count'] : 'null',
+		( 0 < $max_count ) ? (string) $args['max_count'] : 'null',
 		$args['do_allow_url_hash'] ? 'true' : 'false',
 		$args['post_type'] ? ( '"' . esc_html( $args['post_type'] ) . '"' ) : 'null'
 	);

@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2023-11-05
+ * @version 2024-03-14
  */
 
 declare(strict_types=1);
@@ -34,6 +34,7 @@ namespace wpinc\dia\rich_editor;
  * } Arguments.
  */
 function _set_default_args( array $args ): array {
+	/** @psalm-suppress InvalidArrayOffset */  // phpcs:ignore
 	if ( isset( $args['key_postfix_title'] ) ) {  // @phpstan-ignore-line
 		if ( WP_DEBUG ) {
 			trigger_error( 'Use key \'key_suffix_title\' instead.', E_USER_DEPRECATED );  // phpcs:ignore
@@ -41,6 +42,7 @@ function _set_default_args( array $args ): array {
 		$args['key_suffix_title'] = $args['key_postfix_title'];
 		unset( $args['key_postfix_title'] );
 	}
+	/** @psalm-suppress InvalidArrayOffset */  // phpcs:ignore
 	if ( isset( $args['key_postfix_content'] ) ) {  // @phpstan-ignore-line
 		if ( WP_DEBUG ) {
 			trigger_error( 'Use key \'key_suffix_content\' instead.', E_USER_DEPRECATED );  // phpcs:ignore
@@ -115,7 +117,7 @@ function save_meta_box( array $args, int $post_id ): void {
 	if ( ! is_string( $nonce ) ) {
 		return;
 	}
-	if ( ! wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
+	if ( false === wp_verify_nonce( sanitize_key( $nonce ), $key ) ) {
 		return;
 	}
 	if ( 'title_content' === $args['type'] ) {
@@ -182,11 +184,14 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
  * @param mixed|null  $def         Default value.
  */
 function _set_post_meta_with_wp_filter( int $post_id, string $key, ?string $filter_name = null, $def = null ): void {
-	$val = $_POST[ $key ] ?? null;  // phpcs:ignore
-	if ( null !== $filter_name && null !== $val ) {
+	if ( ! isset( $_POST[ $key ] ) ) {  // phpcs:ignore
+		return;  // When called through bulk edit.
+	}
+	$val = $_POST[ $key ];  // phpcs:ignore
+	if ( is_string( $filter_name ) ) {
 		$val = apply_filters( $filter_name, $val );
 	}
-	if ( empty( $val ) ) {
+	if ( null === $val || '' === $val ) {
 		if ( null === $def ) {
 			delete_post_meta( $post_id, $key );
 			return;
