@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2024-03-14
+ * @version 2024-04-18
  */
 
 declare(strict_types=1);
@@ -238,7 +238,8 @@ function save_meta_box( array $args, int $post_id ): void {
 function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
-	output_html( $args, $post->ID );
+	/** @psalm-suppress RedundantCastGivenDocblockType */  // phpcs:ignore
+	output_html( $args, (int) $post->ID );  // For classic editor.
 }
 
 /** phpcs:ignore

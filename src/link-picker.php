@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2024-03-14
+ * @version 2024-04-18
  */
 
 declare(strict_types=1);
@@ -440,7 +440,8 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 
 	$max_count = is_int( $args['max_count'] ) ? $args['max_count'] : 0;
 
-	$its = get_data( $args, $post->ID );
+	/** @psalm-suppress RedundantCastGivenDocblockType */  // phpcs:ignore
+	$its = get_data( $args, (int) $post->ID );  // For classic editor.
 	if ( ! empty( $its ) && 0 < $max_count ) {
 		$its = array_slice( $its, 0, min( $args['max_count'], count( $its ) ) );
 	}

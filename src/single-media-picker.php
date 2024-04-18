@@ -4,7 +4,7 @@
  *
  * @package Wpinc Dia
  * @author Takuto Yanagida
- * @version 2024-03-13
+ * @version 2024-04-18
  */
 
 declare(strict_types=1);
@@ -242,7 +242,8 @@ function _cb_output_html( array $args, \WP_Post $post ): void {
 	$key = $args['key'];
 	wp_nonce_field( $key, "{$key}_nonce" );
 
-	$it = get_data( $args, $post->ID );
+	/** @psalm-suppress RedundantCastGivenDocblockType */  // phpcs:ignore
+	$it = get_data( $args, (int) $post->ID );  // For classic editor.
 
 	$url      = $it ? $it['url'] : '';
 	$title    = $it ? $it['title'] : '';
